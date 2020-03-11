@@ -104,7 +104,7 @@ const $attrName = [
 
   @override
   String writeFileTo(bool isClient) {
-    return 'attributes.${isClient ? 'dart' : 'kt'}';
+    return 'attributes.g.${isClient ? 'dart' : 'kt'}';
   }
 
   @override

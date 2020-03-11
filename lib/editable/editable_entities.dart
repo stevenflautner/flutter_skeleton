@@ -141,9 +141,9 @@ class $entityName {
   @override
   String writeFileTo(bool isClient) {
     if (isClient) {
-      return 'entities.dart';
+      return 'entities.g.dart';
     }
-    return 'entities.kt';
+    return 'entities.g.kt';
   }
 
   @override
