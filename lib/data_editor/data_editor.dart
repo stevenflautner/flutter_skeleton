@@ -32,8 +32,9 @@ abstract class EditableData<T> extends ChangeNotifier {
         ..write('\n');
     });
 
-    _writeFile(clientPath, writeFileTo(true), clientStringBuffer.toString());
-    _writeFile(serverPath, writeFileTo(false), serverStringBuffer.toString());
+    final app = get<Application>();
+    _writeFile(app.clientSrcPath, writeFileTo(true), clientStringBuffer.toString());
+    _writeFile(app.serverSrcPath, writeFileTo(false), serverStringBuffer.toString());
   }
 
   void _writeHead(StringBuffer clientStringBuffer, StringBuffer serverStringBuffer) {
