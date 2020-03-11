@@ -38,7 +38,7 @@ import 'attributes.g.dart';
 
   @override
   String writeServerHead() {
-    return 'import ${get<Application>().serverKotlinPackage}.*';
+    return 'package ${get<Application>().serverKotlinPackage}';
   }
 
   @override

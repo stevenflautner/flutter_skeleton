@@ -48,7 +48,7 @@ abstract class EditableData<T> extends ChangeNotifier {
     if (serverHead != null)
       serverStringBuffer
         ..write(serverHead.trim())
-        ..write('\n');
+        ..write('\n\n');
   }
 
   String writeServerHead() => null;
