@@ -39,7 +39,7 @@ class EditableEntities extends EditableData<Map<String, String>> {
   String writeClientHead() {
     return
 '''
-import 'attributes.dart';
+import 'attributes.g.dart';
 ''';
   }
 
