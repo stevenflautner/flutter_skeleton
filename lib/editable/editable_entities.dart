@@ -28,12 +28,21 @@ class EditableEntities extends EditableData<Map<String, String>> {
     notify();
   }
 
-  String _fromJson(Type type) {
-    if (get<Application>().attributes.containsKey(type.baseType)) {
-      return '${type.baseType}FromJson(json)';
-    }
-    return '${type.dartString}.fromJson(json)';
-  }
+//  String _fromJson(Type type) {
+//    if (attr != null) {
+//      if (attr is EnumAttribute) {
+//        return "${fieldType.baseType}.values[json['$fieldName'] as int]";
+//      }
+//      if (attr is ListAttribute) {
+//        return "${fieldType.baseType}[json['$fieldName'] as int]";
+//      }
+//    }
+//
+//    if (get<Application>().attributes.containsKey(type.baseType)) {
+//      return '${type.baseType}FromJson(json)';
+//    }
+//    return '${type.dartString}.fromJson(json)';
+//  }
 
   @override
   String writeClientHead() {
@@ -86,10 +95,8 @@ import 'attributes.g.dart';
       final fieldType = Type(entityFields[fieldName]);
 
       final attr = get<Application>().attributes[fieldType.baseType];
-
       if (attr != null) {
         if (attr is EnumAttribute) {
-//          return '${fieldType.baseType}FromJson(json)';
           return "${fieldType.baseType}.values[json['$fieldName'] as int]";
         }
         if (attr is ListAttribute) {
@@ -101,7 +108,22 @@ import 'attributes.g.dart';
         if (fieldType.subtype.isPrimitive) {
           return "json['$fieldName'].cast<${fieldType.subtype.dartString}>()";
         } else {
-          return "(json['$fieldName'] as List).map((json) => ${_fromJson(fieldType.subtype)})";
+          final attr = get<Application>().attributes[fieldType.subtype.baseType];
+
+          if (attr != null) {
+            String attrFromJson;
+            if (attr is EnumAttribute) {
+              attrFromJson = "${fieldType.baseType}.values[json as int]";
+            }
+            if (attr is ListAttribute) {
+              attrFromJson = "${fieldType.baseType}[json as int]";
+            }
+            return "(json['$fieldName'] as List).map((json) => $attrFromJson)";
+          }
+
+//          return '${type.dartString}.fromJson(json)';
+
+          return "(json['$fieldName'] as List).map((json) => ${fieldType.subtype.dartString}.fromJson(json))";
         }
       } else {
         return "json['$fieldName']";
