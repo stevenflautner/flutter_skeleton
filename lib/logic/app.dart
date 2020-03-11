@@ -34,7 +34,7 @@ class Application {
   }
 
   void initServerPath() {
-    final serverBuildGradleString = File('test.gradle').readAsStringSync();
+    final serverBuildGradleString = File('$serverRootPath/build.gradle').readAsStringSync();
     final typeMatch = RegExp(r'mainClassName = "(.*).MainKt"').firstMatch(serverBuildGradleString);
     if (typeMatch == null)
       throw 'mainClassName could not be identified';
