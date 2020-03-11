@@ -113,10 +113,10 @@ import 'attributes.g.dart';
           if (attr != null) {
             String attrFromJson;
             if (attr is EnumAttribute) {
-              attrFromJson = "${fieldType.baseType}.values[json as int]";
+              attrFromJson = "${fieldType.subtype.baseType}.values[json as int]";
             }
             if (attr is ListAttribute) {
-              attrFromJson = "${fieldType.baseType}[json as int]";
+              attrFromJson = "${fieldType.subtype.baseType}[json as int]";
             }
             return "(json['$fieldName'] as List).map((json) => $attrFromJson)";
           }
