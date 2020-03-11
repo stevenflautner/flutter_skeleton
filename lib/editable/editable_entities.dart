@@ -139,10 +139,15 @@ class $entityName {
 
   @override
   String writeServerObjString(String entityName, Map<String, String> fields) {
-    final fieldsString = writeFor(fields.keys.toList(), 1, ', ', (String fieldName) {
+    final fieldsString = writeFor(fields.keys.toList(), 0, ', ', (String fieldName) {
       final fieldType = fields[fieldName];
+      final attr = get<Application>().attributes[fieldType];
+      if (attr != null) {
+        return 'val $fieldName: ${attr.type.subtype.baseType}';
+      }
+
       return 'val $fieldName: $fieldType';
-    }, useSpaces: true);
+    });
 
     return 'data class $entityName($fieldsString)';
   }
