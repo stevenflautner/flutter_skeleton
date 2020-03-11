@@ -46,6 +46,11 @@ class EditableAttributes extends EditableData<Attribute> {
   }
 
   @override
+  String writeServerHead() {
+    return 'package ${get<Application>().serverKotlinPackage}';
+  }
+
+  @override
   String writeServerObjString(String attrName, Attribute attr) {
     if (attr is EnumAttribute) {
       final values = writeFor(attr.values, 1, ',\n', (String value) {

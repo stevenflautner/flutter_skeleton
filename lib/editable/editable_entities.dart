@@ -37,6 +37,11 @@ import 'attributes.g.dart';
   }
 
   @override
+  String writeServerHead() {
+    return 'import ${get<Application>().serverKotlinPackage}.*';
+  }
+
+  @override
   String writeClientObjString(String entityName, Map<String, String> entityFields) {
     final fieldNames = entityFields.keys.toList();
 

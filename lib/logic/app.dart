@@ -13,6 +13,7 @@ const serverRootPath = '../server';
 class Application {
 
   final _path = dirname(Platform.script.toString());
+  String serverKotlinPackage;
   String serverSrcPath;
   String clientSrcPath = '../client/lib';
   String _name;
@@ -39,7 +40,8 @@ class Application {
     if (typeMatch == null)
       throw 'mainClassName could not be identified';
 
-    serverSrcPath = '$serverRootPath/src/main/kotlin/${typeMatch.group(1).replaceAll('.', '/')}';
+    serverKotlinPackage = typeMatch.group(1);
+    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverKotlinPackage.replaceAll('.', '/')}';
   }
 
   Future<void> _loadData() async {
