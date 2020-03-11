@@ -140,7 +140,10 @@ class $entityName {
 
   @override
   String writeFileTo(bool isClient) {
-    return 'entities.${isClient ? 'dart' : 'kt'}';
+    if (isClient) {
+      return 'lib/entities.$isClient.dart';
+    }
+    return 'src/main/kotlin/com/stevenflautner/vimpexcart/server/entities.kt';
   }
 
   @override
