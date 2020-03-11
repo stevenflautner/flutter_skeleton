@@ -66,8 +66,8 @@ enum class $attrName {
 
       return
 '''
-const val $attrName = arrayOf(
-    $values
+val $attrName = arrayOf(
+  $values
 )
 ''';
     }

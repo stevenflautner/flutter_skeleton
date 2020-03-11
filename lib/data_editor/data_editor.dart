@@ -68,12 +68,12 @@ abstract class EditableData<T> extends ChangeNotifier {
 
   Widget buildAddObjDialog(BuildContext context);
 
-  String writeFor<T>(List<T> list, int padding, String trailing, String Function(T value) writer) {
+  String writeFor<T>(List<T> list, int padding, String trailing, String Function(T value) writer, {bool useSpaces = false}) {
     final values = StringBuffer();
 
     final leadingBuffer = StringBuffer();
     for (var i = 0; i < padding; i++) {
-      leadingBuffer.write('  ');
+      leadingBuffer.write(useSpaces ? ' ' : '  ');
     }
     final leading = leadingBuffer.toString();
 

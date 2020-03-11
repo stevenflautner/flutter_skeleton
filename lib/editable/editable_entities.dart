@@ -28,22 +28,6 @@ class EditableEntities extends EditableData<Map<String, String>> {
     notify();
   }
 
-//  String _fromJson(Type type) {
-//    if (attr != null) {
-//      if (attr is EnumAttribute) {
-//        return "${fieldType.baseType}.values[json['$fieldName'] as int]";
-//      }
-//      if (attr is ListAttribute) {
-//        return "${fieldType.baseType}[json['$fieldName'] as int]";
-//      }
-//    }
-//
-//    if (get<Application>().attributes.containsKey(type.baseType)) {
-//      return '${type.baseType}FromJson(json)';
-//    }
-//    return '${type.dartString}.fromJson(json)';
-//  }
-
   @override
   String writeClientHead() {
     return
@@ -115,13 +99,11 @@ import 'attributes.g.dart';
             if (attr is EnumAttribute) {
               attrFromJson = "${fieldType.subtype.baseType}.values[json as int]";
             }
-            if (attr is ListAttribute) {
+            else if (attr is ListAttribute) {
               attrFromJson = "${fieldType.subtype.baseType}[json as int]";
             }
             return "(json['$fieldName'] as List).map((json) => $attrFromJson)";
           }
-
-//          return '${type.dartString}.fromJson(json)';
 
           return "(json['$fieldName'] as List).map((json) => ${fieldType.subtype.dartString}.fromJson(json))";
         }
@@ -155,7 +137,7 @@ class $entityName {
     final fieldsString = writeFor(fields.keys.toList(), 1, ', ', (String fieldName) {
       final fieldType = fields[fieldName];
       return 'val $fieldName: $fieldType';
-    });
+    }, useSpaces: true);
 
     return 'data class $entityName($fieldsString)';
   }
