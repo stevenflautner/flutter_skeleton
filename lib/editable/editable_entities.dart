@@ -142,7 +142,7 @@ class $entityName {
     final fieldsString = writeFor(fields.keys.toList(), 0, ', ', (String fieldName) {
       final fieldType = fields[fieldName];
       final attr = get<Application>().attributes[fieldType];
-      if (attr != null) {
+      if (attr != null && attr is ListAttribute) {
         return 'val $fieldName: ${attr.type.subtype.baseType}';
       }
 
