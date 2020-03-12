@@ -131,7 +131,7 @@ class Type {
         primitiveString = 'bool';
         break;
       }
-      case 'Integer': {
+      case 'Int': {
         primitiveString = 'int';
         break;
       }
