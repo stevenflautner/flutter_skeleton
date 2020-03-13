@@ -144,7 +144,7 @@ class ${entity.name} {
   @override
   String writeServerObjString(Entity entity) {
     final fieldsString = writeFor(entity.fields, 0, ', ', (EntityField field) {
-      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
+      final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.baseType, orElse: () => null);
 
       String leadingType = field.serverModifiable ? 'var' : 'val';
 
@@ -152,7 +152,7 @@ class ${entity.name} {
         return '$leadingType ${field.name}: ${attr.type.subtype.baseType}';
       }
 
-      return '$leadingType ${field.name}: ${field.type.baseType}';
+      return '$leadingType ${field.name}: ${field.type.fullTypeString}';
     });
 
     return 'data class ${entity.name}($fieldsString)';
