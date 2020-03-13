@@ -9,7 +9,6 @@ import 'package:path/path.dart';
 
 //const clientRootPath = 'work/client';
 //const serverRootPath = 'work/server';
-
 const clientRootPath = '../client';
 const serverRootPath = '../server';
 

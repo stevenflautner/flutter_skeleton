@@ -47,7 +47,7 @@ class _EditableDataViewState extends State<EditableDataView> {
                               },
                               child: ColumnButton(
                                 text: obj.name,
-                                selected: selectedObj == obj
+                                selected: selectedObj.obj == obj
                               )
                             );
                           })
