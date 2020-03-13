@@ -88,10 +88,10 @@ import 'attributes.g.dart';
 
       if (attr != null) {
         if (attr is EnumAttribute) {
-          return "${attr.type.baseType}.values[json['${field.name}'] as int]";
+          return "${attr.name}.values[json['${field.name}'] as int]";
         }
         if (attr is ListAttribute) {
-          return "${attr.type.baseType}[json['${field.name}'] as int]";
+          return "${attr.name}[json['${field.name}'] as int]";
         }
       }
 
@@ -99,7 +99,7 @@ import 'attributes.g.dart';
         if (field.type.subtype.isPrimitive) {
           return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
         } else {
-          final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.fullTypeString, orElse: () => null);
+          final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.baseType, orElse: () => null);
 
           if (attr != null) {
             String attrFromJson;
