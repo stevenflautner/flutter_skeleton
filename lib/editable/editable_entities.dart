@@ -53,7 +53,7 @@ import 'attributes.g.dart';
   @override
   String writeClientObjString(Entity entity) {
     final fields = writeFor(entity.fields, 1, '\n', (EntityField field) {
-      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
+      final attr = _findAttr(field);
 
       String leadingFinal = field.clientModifiable ? '' : 'final ';
 
@@ -69,7 +69,7 @@ import 'attributes.g.dart';
     });
 
     final toJson = writeFor(entity.fields, 2, ',\n', (EntityField field) {
-      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
+      final attr = _findAttr(field);
 
       if (attr != null) {
         if (attr is EnumAttribute) {
@@ -84,7 +84,7 @@ import 'attributes.g.dart';
     });
 
     final fromJson = writeFor(entity.fields, 3, ',\n', (EntityField field) {
-      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
+      final attr = _findAttr(field);
 
       if (attr != null) {
         if (attr is EnumAttribute) {
@@ -99,7 +99,7 @@ import 'attributes.g.dart';
         if (field.type.subtype.isPrimitive) {
           return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
         } else {
-          final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.subtype.fullTypeString, orElse: () => null);
+          final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.baseType, orElse: () => null);
 
           if (attr != null) {
             String attrFromJson;
@@ -138,6 +138,8 @@ class ${entity.name} {
 }
 '''.trim();
   }
+
+  Attribute _findAttr(EntityField field) => get<Application>().attributes.firstWhere((attr) => attr.name == field.name, orElse: () => null);
 
   @override
   String writeServerObjString(Entity entity) {
