@@ -139,7 +139,7 @@ class ${entity.name} {
 '''.trim();
   }
 
-  Attribute _findAttr(EntityField field) => get<Application>().attributes.firstWhere((attr) => attr.name == field.name, orElse: () => null);
+  Attribute _findAttr(EntityField field) => get<Application>().attributes.firstWhere((attr) => attr.name == field.type.baseType, orElse: () => null);
 
   @override
   String writeServerObjString(Entity entity) {
