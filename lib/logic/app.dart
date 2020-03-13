@@ -7,11 +7,11 @@ import 'package:flutter_manager/widget_library/widget_library_view.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
-const clientRootPath = 'work/client';
-const serverRootPath = 'work/server';
+//const clientRootPath = 'work/client';
+//const serverRootPath = 'work/server';
 
-//const clientRootPath = '../client';
-//const serverRootPath = '../server';
+const clientRootPath = '../client';
+const serverRootPath = '../server';
 
 class Application {
 
@@ -32,9 +32,9 @@ class Application {
   Future<void> initialize() async {
     final split = _path.split('/');
     _name = split[split.length - 2];
-    serverKotlinPackage = '';
-    serverSrcPath = serverRootPath;
-    //    initServerPath();
+//    serverKotlinPackage = '';
+//    serverSrcPath = serverRootPath;
+        initServerPath();
 
     await _loadData();
   }
