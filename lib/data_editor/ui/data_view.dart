@@ -19,7 +19,6 @@ class _EditableDataViewState extends State<EditableDataView> {
   @override
   Widget build(BuildContext context) {
     final data = context.depends<EditableData>().getData();
-    final keys = data.keys.toList();
 
     return ChangeNotifierProvider(
       create: (_) => SelectedObject(),
@@ -39,16 +38,16 @@ class _EditableDataViewState extends State<EditableDataView> {
                     children: <Widget>[
                       Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List.generate(keys.length, (index) {
-                            final objName = keys[index];
+                          children: List.generate(data.length, (index) {
+                            final obj = data[index];
 
                             return GestureDetector(
                               onTap: () {
-                                context.get<SelectedObject>().select(objName);
+                                context.get<SelectedObject>().select(obj);
                               },
                               child: ColumnButton(
-                                text: objName,
-                                selected: selectedObj.name == objName
+                                text: obj.name,
+                                selected: selectedObj == obj
                               )
                             );
                           })
@@ -81,7 +80,7 @@ class ObjView extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedObj = context.depends<SelectedObject>();
 
-    if (selectedObj.name == null)
+    if (selectedObj.obj == null)
       return SizedBox();
 
     return context.get<EditableData>().buildObjView();

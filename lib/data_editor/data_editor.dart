@@ -1,13 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter_manager/entities.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_managed/locator.dart';
 
 abstract class EditableData<T> extends ChangeNotifier {
 
-  void remove(String objName) {
-    getData().remove(objName);
+  void remove(T obj) {
+    getData().remove(obj);
     notify();
   }
 
@@ -23,12 +24,12 @@ abstract class EditableData<T> extends ChangeNotifier {
 
     _writeHead(clientStringBuffer, serverStringBuffer);
 
-    getData().forEach((objName, obj) {
+    getData().forEach((obj) {
       clientStringBuffer
-        ..write(writeClientObjString(objName, obj).trim())
+        ..write(writeClientObjString(obj).trim())
         ..write('\n');
       serverStringBuffer
-        ..write(writeServerObjString(objName, obj).trim())
+        ..write(writeServerObjString(obj).trim())
         ..write('\n');
     });
 
@@ -58,11 +59,11 @@ abstract class EditableData<T> extends ChangeNotifier {
     File('$basePath/$path').writeAsStringSync(generatedString);
   }
 
-  String writeClientObjString(String objName, T obj);
-  String writeServerObjString(String objName, T obj);
+  String writeClientObjString(T obj);
+  String writeServerObjString(T obj);
   String writeFileTo(bool isClient);
 
-  Map<String, T> getData();
+  List<T> getData();
 
   Widget buildObjView();
 
@@ -97,14 +98,14 @@ abstract class EditableData<T> extends ChangeNotifier {
 
 class SelectedObject extends ChangeNotifier {
 
-  String _name;
+  DataObj _obj;
 
-  void select(String name) {
-    _name = name;
+  void select(dynamic obj) {
+    _obj = obj;
     notifyListeners();
   }
 
-  String get name => _name;
+  DataObj get obj => _obj;
 }
 
 class Type {

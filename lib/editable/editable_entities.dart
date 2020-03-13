@@ -5,26 +5,35 @@ import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_managed/locator.dart';
 
-class EditableEntities extends EditableData<Map<String, String>> {
+class EditableEntities extends EditableData<Entity> {
 
-  void add(String entityName) {
-    getData()[entityName] = {};
+  Entity add(String entityName) {
+    final entity = Entity(entityName, []);
+    getData().add(entity);
+    notify();
+    return entity;
+  }
+
+  void modifyEntity(Entity entity, String newEntityName) {
+    entity.name = newEntityName;
     notify();
   }
 
-  void addField(String entityName, String newFieldName, String newfieldType) {
-    getData()[entityName][newFieldName] = newfieldType;
+  void addField(Entity entity, String newFieldName, String newfieldType) {
+    entity.fields.add(EntityField(newFieldName, Type(newfieldType), false, false));
     notify();
   }
 
-  void modifyField(String entityName, String fieldName, String newFieldName, String newfieldType) {
-    removeField(entityName, fieldName);
-    addField(entityName, newFieldName, newfieldType);
+  void modifyField(EntityField field, String newFieldName, String newfieldType, bool newServerModifiable, bool newClientModifiable) {
+    field.name = newFieldName;
+    field.type = Type(newfieldType);
+    field.serverModifiable = newServerModifiable;
+    field.clientModifiable = newClientModifiable;
     notify();
   }
 
-  void removeField(String entityName, String fieldName) {
-    getData()[entityName].remove(fieldName);
+  void removeField(Entity entity, EntityField field) {
+    entity.fields.remove(field);
     notify();
   }
 
@@ -42,95 +51,88 @@ import 'attributes.g.dart';
   }
 
   @override
-  String writeClientObjString(String entityName, Map<String, String> entityFields) {
-    final fieldNames = entityFields.keys.toList();
+  String writeClientObjString(Entity entity) {
+    final fields = writeFor(entity.fields, 1, '\n', (EntityField field) {
+      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
 
-    final fields = writeFor(fieldNames, 1, '\n', (fieldName) {
-      final fieldType = Type(entityFields[fieldName]);
-      final attr = get<Application>().attributes[fieldType.baseType];
+      String leadingFinal = field.clientModifiable ? '' : 'final ';
 
-      if (fieldType.baseType == 'Units') {
-          print(attr);
-          print(attr?.type?.subtype);
-      }
       if (attr != null && attr.type.subtype != null) {
-        return 'final ${attr.type.subtype.dartString} $fieldName;';
+        return '$leadingFinal${attr.type.subtype.dartString} ${field.name};';
       }
 
-      return 'final ${fieldType.dartString} $fieldName;';
+      return '$leadingFinal${field.type.dartString} ${field.name};';
     });
 
-    final constructor = writeFor(fieldNames, 0, ', ', (fieldName) {
-      return 'this.$fieldName';
+    final constructor = writeFor(entity.fields, 0, ', ', (EntityField field) {
+      return 'this.${field.name}';
     });
 
-    final toJson = writeFor(fieldNames, 2, ',\n', (fieldName) {
-      final fieldType = entityFields[fieldName];
-      final attr = get<Application>().attributes[fieldType];
+    final toJson = writeFor(entity.fields, 2, ',\n', (EntityField field) {
+      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
 
       if (attr != null) {
         if (attr is EnumAttribute) {
-          return "'$fieldName': $fieldName.index";
+          return "'${field.name}': ${field.name}.index";
         }
         if (attr is ListAttribute) {
-          return "'$fieldName': $fieldType.indexOf($fieldName)";
+          return "'${field.name}': ${field.type.dartString}.indexOf(${field.name})";
         }
       }
 
-      return "'$fieldName': $fieldName";
+      return "'${field.name}': ${field.name}";
     });
 
-    final fromJson = writeFor(fieldNames, 3, ',\n', (fieldName) {
-      final fieldType = Type(entityFields[fieldName]);
+    final fromJson = writeFor(entity.fields, 3, ',\n', (EntityField field) {
+      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
 
-      final attr = get<Application>().attributes[fieldType.baseType];
       if (attr != null) {
         if (attr is EnumAttribute) {
-          return "${fieldType.baseType}.values[json['$fieldName'] as int]";
+          return "${attr.type.baseType}.values[json['${field.name}'] as int]";
         }
         if (attr is ListAttribute) {
-          return "${fieldType.baseType}[json['$fieldName'] as int]";
+          return "${attr.type.baseType}[json['${field.name}'] as int]";
         }
       }
 
-      if (fieldType.subtype != null) {
-        if (fieldType.subtype.isPrimitive) {
-          return "json['$fieldName'].cast<${fieldType.subtype.dartString}>()";
+      if (field.type.subtype != null) {
+        if (field.type.subtype.isPrimitive) {
+          return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
         } else {
-          final attr = get<Application>().attributes[fieldType.subtype.baseType];
+          final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.subtype.fullTypeString, orElse: () => null);
 
           if (attr != null) {
             String attrFromJson;
             if (attr is EnumAttribute) {
-              attrFromJson = "${fieldType.subtype.baseType}.values[json as int]";
+              attrFromJson = "${attr.type.subtype.baseType}.values[json as int]";
             }
             else if (attr is ListAttribute) {
-              attrFromJson = "${fieldType.subtype.baseType}[json as int]";
+              attrFromJson = "${attr.type.subtype.baseType}[json as int]";
             }
-            return "(json['$fieldName'] as List).map((json) => $attrFromJson)";
+            return "(json['${field.name}'] as List).map((json) => $attrFromJson)";
           }
 
-          return "(json['$fieldName'] as List).map((json) => ${fieldType.subtype.dartString}.fromJson(json))";
+          return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json))";
         }
       } else {
-        return "json['$fieldName']";
+        return "json['${field.name}']";
       }
     });
 
     return
 '''
-class $entityName {
+class ${entity.name} {
 
   $fields
 
-  $entityName($constructor);
+  ${entity.name}($constructor);
   
   Map<String, dynamic> toJson() => <String, dynamic> {
     $toJson
   };
   
-  factory $entityName.fromJson(Map<String, dynamic> json) =>
-    $entityName(
+  factory ${entity.name}.fromJson(Map<String, dynamic> json) =>
+    ${entity.name}(
       $fromJson
     );
 }
@@ -138,18 +140,20 @@ class $entityName {
   }
 
   @override
-  String writeServerObjString(String entityName, Map<String, String> fields) {
-    final fieldsString = writeFor(fields.keys.toList(), 0, ', ', (String fieldName) {
-      final fieldType = fields[fieldName];
-      final attr = get<Application>().attributes[fieldType];
+  String writeServerObjString(Entity entity) {
+    final fieldsString = writeFor(entity.fields, 0, ', ', (EntityField field) {
+      final attr = get<Application>().attributes.firstWhere((attr) => attr.type.fullTypeString == field.type.fullTypeString, orElse: () => null);
+
+      String leadingType = field.serverModifiable ? 'var' : 'val';
+
       if (attr != null && attr is ListAttribute) {
-        return 'val $fieldName: ${attr.type.subtype.baseType}';
+        return '$leadingType ${field.name}: ${attr.type.subtype.baseType}';
       }
 
-      return 'val $fieldName: $fieldType';
+      return '$leadingType ${field.name}: ${field.type.dartString}';
     });
 
-    return 'data class $entityName($fieldsString)';
+    return 'data class ${entity.name}($fieldsString)';
   }
 
   @override
@@ -161,7 +165,7 @@ class $entityName {
   }
 
   @override
-  Map<String, Map<String, String>> getData() {
+  List<Entity> getData() {
     return get<Application>().entities;
   }
 

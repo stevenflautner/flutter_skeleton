@@ -7,41 +7,42 @@ import 'package:flutter_manager/logic/app.dart';
 
 class EditableAttributes extends EditableData<Attribute> {
 
-  void add(String attrName, String typeString) {
+  Attribute add(String attrName, String typeString) {
+    Attribute attr;
     final type = Type(typeString);
     if (type.baseType.contains('List')) {
-      getData()[attrName] = ListAttribute(type, []);
+      attr = ListAttribute(attrName, type, []);
+      getData().add(attr);
     }
     else {
-      getData()[attrName] = EnumAttribute([]);
+      attr = EnumAttribute(attrName, []);
+      getData().add(attr);
     }
     notify();
+    return attr;
   }
 
-  void addValue(String attrName, String value) {
-    (getData()[attrName] as ValueAttribute).values.add(value);
+  void addValue(Attribute attr, String value) {
+    (attr as ValueAttribute).values.add(value);
     notify();
   }
 
-  void removeValue(String attrName, String value) {
-    (getData()[attrName] as ValueAttribute).values.remove(value);
+  void removeValue(Attribute attr, String value) {
+    (attr as ValueAttribute).values.remove(value);
     notify();
   }
 
-  void modifyValue(String attrName, String oldValue, String newValue) {
-    final attr = getData()[attrName] as ValueAttribute;
-    final index = attr.values.indexOf(oldValue);
+  void modifyValue(Attribute attr, String oldValue, String newValue) {
+    final valueAttr = attr as ValueAttribute;
+    final index = valueAttr.values.indexOf(oldValue);
 
-    removeValue(attrName, oldValue);
-    attr.values.insert(index, newValue);
+    removeValue(valueAttr, oldValue);
+    valueAttr.values.insert(index, newValue);
     notify();
   }
 
-  void modifyAttr(String attrName, String newAttrName) {
-    final data = getData();
-    final currentAttr = data[attrName];
-    data.remove(attrName);
-    data[newAttrName] = currentAttr;
+  void modifyAttr(Attribute attr, String newAttrName) {
+    attr.name = newAttrName;
     notify();
   }
 
@@ -51,7 +52,7 @@ class EditableAttributes extends EditableData<Attribute> {
   }
 
   @override
-  String writeServerObjString(String attrName, Attribute attr) {
+  String writeServerObjString(Attribute attr) {
     if (attr is EnumAttribute) {
       final values = writeFor(attr.values, 1, ',\n', (String value) {
         return value.toUpperCase();
@@ -59,7 +60,7 @@ class EditableAttributes extends EditableData<Attribute> {
 
       return
 '''
-enum class $attrName {
+enum class ${attr.name} {
   $values
 }
 ''';
@@ -71,7 +72,7 @@ enum class $attrName {
 
       return
 '''
-val $attrName = arrayOf(
+val ${attr.name} = arrayOf(
   $values
 )
 ''';
@@ -79,7 +80,7 @@ val $attrName = arrayOf(
   }
 
   @override
-  String writeClientObjString(String attrName, Attribute attr) {
+  String writeClientObjString(Attribute attr) {
     if (attr is EnumAttribute) {
       final values = writeFor(attr.values, 1, ',\n', (String value) {
         return value;
@@ -87,7 +88,7 @@ val $attrName = arrayOf(
 
       return
 '''
-enum $attrName {
+enum ${attr.name} {
   $values
 }
 ''';
@@ -100,7 +101,7 @@ enum $attrName {
 
       return
   '''
-const $attrName = [
+const ${attr.name} = [
   $values
 ];
 ''';
@@ -113,9 +114,7 @@ const $attrName = [
   }
 
   @override
-  Map<String, Attribute> getData() {
-    return get<Application>().attributes;
-  }
+  List<Attribute> getData() => get<Application>().attributes;
 
   @override
   Widget buildAddObjDialog(BuildContext context) => AddAttributeDialog();

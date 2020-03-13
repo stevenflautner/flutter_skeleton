@@ -13,12 +13,16 @@ class EntityObjView extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedObj = context.get<SelectedObject>();
     final editableData = context.get<EditableData>() as EditableEntities;
-    final entity = editableData.getData()[selectedObj.name];
+    final entity = selectedObj.obj as Entity;
 
     final fieldNameList = <Widget>[];
     final fieldTypeList = <Widget>[];
 
-    entity.forEach((fieldName, fieldType) {
+    const nameId = 'Name';
+    const typeId = 'Type';
+    const serverModifiableId = 'Server modifiable';
+    const clientModifiableId = 'Client modifiable';
+    entity.fields.forEach((EntityField field) {
       void onTap() {
         showDialog(
           context: context,
@@ -27,31 +31,35 @@ class EntityObjView extends StatelessWidget {
               value: editableData,
               child: DataDialog(
                 fields: {
-                  'Name': fieldName,
-                  'Type': fieldType
+                  nameId: field.name,
+                  typeId: field.type.fullTypeString
                 },
-                buttonsBuilder: (context, controllers) {
+                checkboxes: {
+                  serverModifiableId: field.serverModifiable,
+                  clientModifiableId: field.clientModifiable
+                },
+                buttonsBuilder: (context, values) {
                   return [
-                    DataDialog.buildButton(
-                      context: context,
+                    DataDialogButton(
                       text: 'Save',
-                      onPressed: () {
-                        final newFieldName = controllers['Name'].text;
-                        final newFieldType = controllers['Type'].text;
+                      onPressed: (values) {
+                        final newFieldName = values[nameId].toString();
+                        final newFieldType = values[typeId].toString();
+                        final newServerModifiable = values[serverModifiableId] as bool;
+                        final newClientModifiable = values[clientModifiableId] as bool;
 
                         (context.get<EditableData>() as EditableEntities)
-                            .modifyField(selectedObj.name, fieldName, newFieldName, newFieldType);
+                            .modifyField(field, newFieldName, newFieldType, newServerModifiable, newClientModifiable);
                         Navigator.pop(context);
                       }
                     ),
-                    DataDialog.buildButton(
-                        context: context,
-                        text: 'Delete',
-                        bgColor: Colors.red,
-                        onPressed: () {
-                          editableData.removeField(selectedObj.name, fieldName);
-                          Navigator.pop(context);
-                        }
+                    DataDialogButton(
+                      text: 'Delete',
+                      bgColor: Colors.red,
+                      onPressed: (values) {
+                        editableData.removeField(entity, field);
+                        Navigator.pop(context);
+                      }
                     )
                   ];
                 },
@@ -66,7 +74,7 @@ class EntityObjView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: GestureDetector(
               onTap: onTap,
-              child: Text('$fieldName:', style: TextStyle(
+              child: Text('${field.name}:', style: TextStyle(
                   fontSize: 25
               )),
             ),
@@ -77,7 +85,7 @@ class EntityObjView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: GestureDetector(
               onTap: onTap,
-              child: Text(fieldType, style: TextStyle(
+              child: Text(field.type.fullTypeString, style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.bold
               )),
@@ -96,7 +104,7 @@ class EntityObjView extends StatelessWidget {
             children: <Widget>[
               ObjView.buildEditButton(
                 context: context,
-                dialog: _buildEditEntityDialog(context, selectedObj.name, entity)
+                dialog: _buildEditEntityDialog(context, entity)
               ),
               SizedBox(height: 10),
               Row(
@@ -119,19 +127,18 @@ class EntityObjView extends StatelessWidget {
                       'Name': null,
                       'Type': null,
                     },
-                    buttonsBuilder: (context, controllers) {
+                    buttonsBuilder: (context, values) {
                       return [
-                        DataDialog.buildButton(
-                            context: context,
-                            text: 'Save',
-                            onPressed: () {
-                              editableData.addField(
-                                  selectedObj.name,
-                                  controllers['Name'].text,
-                                  controllers['Type'].text
-                              );
-                              Navigator.pop(context);
-                            }
+                        DataDialogButton(
+                          text: 'Save',
+                          onPressed: (values) {
+                            editableData.addField(
+                                entity,
+                                values['Name'].toString(),
+                                values['Type'].toString()
+                            );
+                            Navigator.pop(context);
+                          }
                         )
                       ];
                     },
@@ -144,34 +151,32 @@ class EntityObjView extends StatelessWidget {
     );
   }
 
-  DataDialog _buildEditEntityDialog(BuildContext context, String entityName, Map<String, String> entity) {
+  DataDialog _buildEditEntityDialog(BuildContext context, Entity entity) {
     final entityNameId = 'Entity name';
 
     return DataDialog(
       fields: {
-        entityNameId: entityName,
+        entityNameId: entity.name,
       },
-      buttonsBuilder: (context, controllers) {
+      buttonsBuilder: (context, values) {
         return [
-          DataDialog.buildButton(
-              context: context,
-              text: 'Save',
-              onPressed: () {
-                final newEntityName = controllers[entityNameId].text;
+          DataDialogButton(
+            text: 'Save',
+            onPressed: (values) {
+              final newEntityName = values[entityNameId].toString();
 //                final newAttrType = controllers['Type'].text;
 
-//                (context.get<EditableData>() as EditableEntities)
-//                    .modifyEntity(attrName, newAttrName);
-                context.get<SelectedObject>().select(newEntityName);
-                Navigator.pop(context);
-              }
+              (context.get<EditableData>() as EditableEntities)
+                  .modifyEntity(entity, newEntityName);
+              context.get<SelectedObject>().select(entity);
+              Navigator.pop(context);
+            }
           ),
-          DataDialog.buildButton(
-            context: context,
+          DataDialogButton(
             text: 'Delete',
             bgColor: Colors.red,
-            onPressed: () {
-              context.get<EditableData>().remove(context.get<SelectedObject>().name);
+            onPressed: (values) {
+              context.get<EditableData>().remove(entity);
               context.get<SelectedObject>().select(null);
               Navigator.pop(context);
             }
@@ -187,7 +192,7 @@ class AttributeObjView extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedObj = context.get<SelectedObject>();
     final editableData = context.get<EditableData>() as EditableAttributes;
-    final attribute = editableData.getData()[selectedObj.name];
+    final attr = selectedObj.obj as Attribute;
 
     return SingleChildScrollView(
       child: SingleChildScrollView(
@@ -200,10 +205,10 @@ class AttributeObjView extends StatelessWidget {
                 children: <Widget>[
                   ObjView.buildEditButton(
                     context: context,
-                    dialog: _buildEditDialog(context, selectedObj.name, attribute)
+                    dialog: _buildEditDialog(context, attr)
                   ),
                   SizedBox(width: 10),
-                  Text('Type: ${attribute.type.fullTypeString}', style: const TextStyle(
+                  Text('Type: ${attr.type.fullTypeString}', style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20
                   )),
@@ -212,7 +217,7 @@ class AttributeObjView extends StatelessWidget {
               SizedBox(height: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: _buildFieldList(context, selectedObj.name, attribute)
+                children: _buildFieldList(context, attr)
               ),
               ObjView.buildNewButton(
                 context: context,
@@ -220,14 +225,12 @@ class AttributeObjView extends StatelessWidget {
                   fields: const {
                     'Value': null
                   },
-                  buttonsBuilder: (context, controllers) {
+                  buttonsBuilder: (context, values) {
                     return [
-                      DataDialog.buildButton(
-                        context: context,
+                      DataDialogButton(
                         text: 'Save',
-                        onPressed: () {
-                          final objName = context.get<SelectedObject>().name;
-                          editableData.addValue(objName, controllers['Value'].text);
+                        onPressed: (values) {
+                          editableData.addValue(attr, values['Value'].toString());
                           Navigator.of(context).pop();
                         }
                       )
@@ -242,10 +245,10 @@ class AttributeObjView extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildFieldList(BuildContext context, String attrName, Attribute attribute) {
-    if (attribute is ValueAttribute) {
+  List<Widget> _buildFieldList(BuildContext context, Attribute attr) {
+    if (attr is ValueAttribute) {
       return [
-        for (String value in attribute.values) ...{
+        for (String value in attr.values) ...{
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: GestureDetector(
@@ -256,25 +259,23 @@ class AttributeObjView extends StatelessWidget {
                     fields: {
                       'Value': value
                     },
-                    buttonsBuilder: (context, controllers) {
+                    buttonsBuilder: (context, values) {
                       return [
-                        DataDialog.buildButton(
-                          context: context,
+                        DataDialogButton(
                           text: 'Save',
-                          onPressed: () {
-                            final newValue = controllers['Value'].text;
+                          onPressed: (values) {
+                            final newValue = values['Value'].toString();
                             (context.get<EditableData>() as EditableAttributes)
-                                .modifyValue(attrName, value, newValue);
+                                .modifyValue(attr, value, newValue);
                             Navigator.of(context).pop();
                           }
                         ),
-                        DataDialog.buildButton(
-                          context: context,
+                        DataDialogButton(
                           text: 'Delete',
                           bgColor: Colors.red,
-                          onPressed: () {
+                          onPressed: (values) {
                             (context.get<EditableData>() as EditableAttributes)
-                                .removeValue(attrName, value);
+                                .removeValue(attr, value);
                             Navigator.of(context).pop();
                           }
                         )
@@ -294,34 +295,32 @@ class AttributeObjView extends StatelessWidget {
     throw 'no impl found';
   }
 
-  DataDialog _buildEditDialog(BuildContext context, String attrName, Attribute attr) {
+  DataDialog _buildEditDialog(BuildContext context, Attribute attr) {
     final attrNameId = 'Attribute name';
 
     return DataDialog(
       fields: {
-        attrNameId: attrName,
+        attrNameId: attr.name,
       },
-      buttonsBuilder: (context, controllers) {
+      buttonsBuilder: (context, values) {
         return [
-          DataDialog.buildButton(
-            context: context,
+          DataDialogButton(
             text: 'Save',
-            onPressed: () {
-              final newAttrName = controllers[attrNameId].text;
+            onPressed: (values) {
+              final newAttrName = values[attrNameId].toString();
 //                final newAttrType = controllers['Type'].text;
 
               (context.get<EditableData>() as EditableAttributes)
-                  .modifyAttr(attrName, newAttrName);
-              context.get<SelectedObject>().select(newAttrName);
+                  .modifyAttr(attr, newAttrName);
+              context.get<SelectedObject>().select(attr);
               Navigator.pop(context);
             }
           ),
-          DataDialog.buildButton(
-            context: context,
+          DataDialogButton(
             text: 'Delete',
             bgColor: Colors.red,
-            onPressed: () {
-              context.get<EditableData>().remove(context.get<SelectedObject>().name);
+            onPressed: (values) {
+              context.get<EditableData>().remove(attr);
               context.get<SelectedObject>().select(null);
               Navigator.pop(context);
             }
@@ -343,17 +342,16 @@ class AddAttributeDialog extends StatelessWidget {
         attrNameId: null,
         attrTypeId: null
       },
-      buttonsBuilder: (context, controllers) {
+      buttonsBuilder: (context, values) {
         return [
-          DataDialog.buildButton(
-            context: context,
+          DataDialogButton(
             text: 'Save',
-            onPressed: () {
-              final attrName = controllers[attrNameId].text;
-              final attrType = controllers[attrTypeId].text;
+            onPressed: (values) {
+              final attrName = values[attrNameId].toString();
+              final attrType = values[attrTypeId].toString();
 
-              (context.get<EditableData>() as EditableAttributes).add(attrName, attrType);
-              context.get<SelectedObject>().select(attrName);
+              final attr = (context.get<EditableData>() as EditableAttributes).add(attrName, attrType);
+              context.get<SelectedObject>().select(attr);
               Navigator.pop(context);
             }
           )
@@ -371,21 +369,71 @@ class AddEntityDialog extends StatelessWidget {
       fields: {
         entityNameId: null
       },
-      buttonsBuilder: (context, controllers) {
+      buttonsBuilder: (context, values) {
         return [
-          DataDialog.buildButton(
-              context: context,
-              text: 'Save',
-              onPressed: () {
-                final entityName = controllers[entityNameId].text;
+          DataDialogButton(
+            text: 'Save',
+            onPressed: (values) {
+              final entityName = values[entityNameId].toString();
 
-                (context.get<EditableData>() as EditableEntities).add(entityName);
-                context.get<SelectedObject>().select(entityName);
-                Navigator.pop(context);
-              }
+              final entity = (context.get<EditableData>() as EditableEntities).add(entityName);
+              context.get<SelectedObject>().select(entity);
+              Navigator.pop(context);
+            }
           )
         ];
       },
     );
   }
 }
+
+//class EntityFieldDialog extends StatefulWidget {
+//
+//  final String entityName;
+//  final Map<String, String> entity;
+//
+//  const EntityFieldDialog({Key key, this.entityName, this.entity}) : super(key: key);
+//
+//  @override
+//  _EntityFieldDialogState createState() => _EntityFieldDialogState();
+//}
+//
+//class _EntityFieldDialogState extends State<EntityFieldDialog> {
+//  @override
+//  Widget build(BuildContext context) {
+//    final entityNameId = 'Entity name';
+//
+//    return DataDialog(
+//      fields: {
+//        entityNameId: widget.entityName,
+//      },
+//      buttonsBuilder: (context, controllers) {
+//        return [
+//          DataDialog.buildButton(
+//              context: context,
+//              text: 'Save',
+//              onPressed: () {
+//                final newEntityName = controllers[entityNameId].text;
+////                final newAttrType = controllers['Type'].text;
+//
+////                (context.get<EditableData>() as EditableEntities)
+////                    .modifyEntity(attrName, newAttrName);
+//                context.get<SelectedObject>().select(newEntityName);
+//                Navigator.pop(context);
+//              }
+//          ),
+//          DataDialog.buildButton(
+//              context: context,
+//              text: 'Delete',
+//              bgColor: Colors.red,
+//              onPressed: () {
+//                context.get<EditableData>().remove(context.get<SelectedObject>().name);
+//                context.get<SelectedObject>().select(null);
+//                Navigator.pop(context);
+//              }
+//          )
+//        ];
+//      },
+//    );
+//  }
+//}

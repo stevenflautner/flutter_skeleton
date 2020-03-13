@@ -3,14 +3,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter_managed/locator.dart';
 import 'package:provider/provider.dart';
 
+class DataDialogButton extends StatelessWidget {
+
+  final String text;
+  final Color bgColor;
+  final void Function(Map<String, dynamic> values) onPressed;
+
+  const DataDialogButton({Key key, this.text, this.bgColor = Colors.greenAccent, this.onPressed}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return RaisedButton(
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+      color: bgColor,
+      onPressed: () {
+        final _DataDialogState dialogState = context.findAncestorStateOfType<_DataDialogState>();
+        onPressed(dialogState._createValuesMap());
+      },
+    );
+  }
+}
+
+
 class DataDialog extends StatefulWidget {
 
   final Map<String, String> fields;
+  final Map<String, bool> checkboxes;
   final List<Widget> Function(
       BuildContext context,
-      Map<String, TextEditingController> controllers) buttonsBuilder;
+      Map<String, dynamic> values) buttonsBuilder;
 
-  const DataDialog({Key key, this.fields, this.buttonsBuilder}) : super(key: key);
+  const DataDialog({Key key, this.fields, this.checkboxes, this.buttonsBuilder}) : super(key: key);
 
   static Widget buildButton({BuildContext context, String text, Function onPressed, Color bgColor = Colors.greenAccent}) {
     return RaisedButton(
@@ -45,19 +68,25 @@ class DataDialog extends StatefulWidget {
 
 class _DataDialogState extends State<DataDialog> {
 
-  Map<String, TextEditingController> _controllers;
+  Map<String, TextEditingController> _fieldControllers;
+  Map<String, bool> _checkboxes;
 
   @override
   void initState() {
-    _controllers = {};
+    _fieldControllers = {};
     widget.fields.forEach((key, value) {
-      _controllers[key] = TextEditingController(text: value);
+      _fieldControllers[key] = TextEditingController(text: value);
     });
+    if (widget.checkboxes != null) {
+      _checkboxes = Map.from(widget.checkboxes);
+    }
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final checkboxKeys = _checkboxes?.keys?.toList();
+
     return Center(
         child: Material(
           borderRadius: BorderRadius.all(Radius.circular(18)),
@@ -71,11 +100,47 @@ class _DataDialogState extends State<DataDialog> {
                   mainAxisSize: MainAxisSize.min,
                   children: _buildFields(context)
                 ),
+                if (checkboxKeys != null) ...{
+                  Column(
+                    children: List.generate(checkboxKeys.length, (index) {
+                      String checkboxKey = checkboxKeys[index];
+                      final checkboxValue = _checkboxes[checkboxKey];
+
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(checkboxKey),
+                          Checkbox(
+                            value: checkboxValue,
+                            onChanged: (bool value) {
+                              setState(() {
+                                _checkboxes[checkboxKey] = !checkboxValue;
+                              });
+                            },
+                          ),
+                        ],
+                      );
+                    })
+                  )
+
+//                  Column(
+//                    mainAxisSize: MainAxisSize.min,
+//                    children: List.generate(checkBoxKeys.length)
+//
+//                    children: <Widget>[
+//                      for (int i = 0; i < checkboxKeys.length; i++) ...{
+////                        String checkboxKey = checkboxKeys[i];
+////                        final checkboxValue = checkboxValues[checkboxKey];
+//
+//                      }
+//                    ],
+//                  ),
+                },
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    for (Widget widget in widget.buttonsBuilder(context, _controllers)) ...{
+                    for (Widget widget in widget.buttonsBuilder(context, _createValuesMap())) ...{
                       widget,
                       SizedBox(width: 20)
                     }
@@ -88,9 +153,20 @@ class _DataDialogState extends State<DataDialog> {
     );
   }
 
+  Map<String, dynamic> _createValuesMap() {
+    final map = <String, dynamic>{};
+    _fieldControllers?.forEach((key, controller) {
+      map[key] = controller.text;
+    });
+    _checkboxes?.forEach((key, value) {
+      map[key] = value;
+    });
+    return map;
+  }
+
   _buildFields(BuildContext context) {
     final list = <Widget>[];
-    _controllers.forEach((fieldName, controller) {
+    _fieldControllers.forEach((fieldName, controller) {
       list.add(
         SizedBox(
           width: 300,
@@ -117,7 +193,7 @@ class _DataDialogState extends State<DataDialog> {
 
   @override
   void dispose() {
-    _controllers.values.forEach((controller) {
+    _fieldControllers.values.forEach((controller) {
       controller.dispose();
     });
     super.dispose();

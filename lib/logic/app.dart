@@ -7,29 +7,34 @@ import 'package:flutter_manager/widget_library/widget_library_view.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
-const clientRootPath = '../client';
-const serverRootPath = '../server';
+const clientRootPath = 'work/client';
+const serverRootPath = 'work/server';
+
+//const clientRootPath = '../client';
+//const serverRootPath = '../server';
 
 class Application {
 
   final _path = dirname(Platform.script.toString());
   String serverKotlinPackage;
   String serverSrcPath;
-  String clientSrcPath = '../client/lib';
+  String clientSrcPath = '$clientRootPath/lib';
   String _name;
   Data _data;
 
   final _defaultDependencies = <PubDependency>[
     GitPubDependency(
-        'flutter_managed',
-        'http://github.com/stevenflautner/flutter_managed.git'
+      'flutter_managed',
+      'http://github.com/stevenflautner/flutter_managed.git'
     )
   ];
 
   Future<void> initialize() async {
     final split = _path.split('/');
     _name = split[split.length - 2];
-    initServerPath();
+    serverKotlinPackage = '';
+    serverSrcPath = serverRootPath;
+    //    initServerPath();
 
     await _loadData();
   }
@@ -49,7 +54,7 @@ class Application {
       final json = jsonDecode(await rootBundle.loadString('assets/data.json'));
       _data = Data.fromJson(json);
     } catch (e) {
-      _data = Data({}, {}, []);
+      _data = Data([], [], []);
     }
   }
 
@@ -99,7 +104,7 @@ class Application {
   }
 
   String get name => _name;
-  Map<String, Map<String, dynamic>> get entities => _data.entities;
-  Map<String, Attribute> get attributes => _data.attributes;
+  List<Entity> get entities => _data.entities;
+  List<Attribute> get attributes => _data.attributes;
   List<PubDependency> get dependencies => _data.dependencies;
 }
