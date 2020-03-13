@@ -99,7 +99,7 @@ import 'attributes.g.dart';
         if (field.type.subtype.isPrimitive) {
           return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
         } else {
-          final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.baseType, orElse: () => null);
+          final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.fullTypeString, orElse: () => null);
 
           if (attr != null) {
             String attrFromJson;
