@@ -152,7 +152,7 @@ class ${entity.name} {
         return '$leadingType ${field.name}: ${attr.type.subtype.baseType}';
       }
 
-      return '$leadingType ${field.name}: ${field.type.dartString}';
+      return '$leadingType ${field.name}: ${field.type.baseType}';
     });
 
     return 'data class ${entity.name}($fieldsString)';
