@@ -153,10 +153,14 @@ class EntityObjView extends StatelessWidget {
 
   DataDialog _buildEditEntityDialog(BuildContext context, Entity entity) {
     final entityNameId = 'Entity name';
+    final customClientDeserializerId = 'Custom client deserializer';
 
     return DataDialog(
       fields: {
         entityNameId: entity.name,
+      },
+      checkboxes: {
+        customClientDeserializerId: entity.customClientDeserializer,
       },
       buttonsBuilder: (context, values) {
         return [
@@ -164,10 +168,11 @@ class EntityObjView extends StatelessWidget {
             text: 'Save',
             onPressed: (values) {
               final newEntityName = values[entityNameId].toString();
+              final newCustomClientDeserializer = values[customClientDeserializerId] as bool;
 //                final newAttrType = controllers['Type'].text;
 
               (context.get<EditableData>() as EditableEntities)
-                  .modifyEntity(entity, newEntityName);
+                  .modifyEntity(entity, newEntityName, newCustomClientDeserializer);
               context.get<SelectedObject>().select(entity);
               Navigator.pop(context);
             }

@@ -17,7 +17,7 @@ class Application {
   final _path = dirname(Platform.script.toString());
   String serverKotlinPackage;
   String serverSrcPath;
-  String clientSrcPath = '$clientRootPath/lib';
+  String clientSrcPath = '$clientRootPath/lib/managed/g';
   String _name;
   Data _data;
 
@@ -31,7 +31,7 @@ class Application {
   Future<void> initialize() async {
     final split = _path.split('/');
     _name = split[split.length - 2];
-//    serverKotlinPackage = '';
+    serverKotlinPackage = '';
 //    serverSrcPath = serverRootPath;
         initServerPath();
 
@@ -45,7 +45,7 @@ class Application {
       throw 'mainClassName could not be identified';
 
     serverKotlinPackage = typeMatch.group(1);
-    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverKotlinPackage.replaceAll('.', '/')}';
+    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverKotlinPackage.replaceAll('.', '/')}/managed';
   }
 
   Future<void> _loadData() async {

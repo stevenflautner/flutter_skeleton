@@ -56,7 +56,12 @@ abstract class EditableData<T> extends ChangeNotifier {
   String writeClientHead() => null;
 
   _writeFile(String basePath, String path, String generatedString) {
-    File('$basePath/$path').writeAsStringSync(generatedString);
+    final fullPath = '$basePath/$path';
+    final file = File(fullPath);
+    if (!file.existsSync()) {
+      file.create(recursive: true);
+    }
+    file.writeAsStringSync(generatedString);
   }
 
   String writeClientObjString(T obj);

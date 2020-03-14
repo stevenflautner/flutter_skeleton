@@ -8,14 +8,15 @@ import 'package:flutter_managed/locator.dart';
 class EditableEntities extends EditableData<Entity> {
 
   Entity add(String entityName) {
-    final entity = Entity(entityName, []);
+    final entity = Entity(entityName, [], false);
     getData().add(entity);
     notify();
     return entity;
   }
 
-  void modifyEntity(Entity entity, String newEntityName) {
+  void modifyEntity(Entity entity, String newEntityName, bool newCustomClientDeserializer) {
     entity.name = newEntityName;
+    entity.customClientDeserializer = newCustomClientDeserializer;
     notify();
   }
 
@@ -41,7 +42,7 @@ class EditableEntities extends EditableData<Entity> {
   String writeClientHead() {
     return
 '''
-import 'attributes.g.dart';
+part of '../entities.dart';
 ''';
   }
 
@@ -83,41 +84,7 @@ import 'attributes.g.dart';
       return "'${field.name}': ${field.name}";
     });
 
-    final fromJson = writeFor(entity.fields, 3, ',\n', (EntityField field) {
-      final attr = _findAttr(field);
-
-      if (attr != null) {
-        if (attr is EnumAttribute) {
-          return "${attr.name}.values[json['${field.name}'] as int]";
-        }
-        if (attr is ListAttribute) {
-          return "${attr.name}[json['${field.name}'] as int]";
-        }
-      }
-
-      if (field.type.subtype != null) {
-        if (field.type.subtype.isPrimitive) {
-          return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
-        } else {
-          final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.baseType, orElse: () => null);
-
-          if (attr != null) {
-            String attrFromJson;
-            if (attr is EnumAttribute) {
-              attrFromJson = "${attr.name}.values[json as int]";
-            }
-            else if (attr is ListAttribute) {
-              attrFromJson = "${attr.name}[json as int]";
-            }
-            return "(json['${field.name}'] as List).map((json) => $attrFromJson)";
-          }
-
-          return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json))";
-        }
-      } else {
-        return "json['${field.name}']";
-      }
-    });
+    String fromJson = _writeFromJson(entity);
 
     return
 '''
@@ -132,11 +99,60 @@ class ${entity.name} {
   };
   
   factory ${entity.name}.fromJson(Map<String, dynamic> json) =>
-    ${entity.name}(
-      $fromJson
-    );
+    $fromJson
 }
 '''.trim();
+  }
+
+  String _writeFromJson(Entity entity) {
+    if (entity.customClientDeserializer) {
+return '''
+    ${entity.name}Deserializer(json);
+'''.trim();
+    } else {
+      final fromJsonFields = writeFor(entity.fields, 3, ',\n', (EntityField field) {
+        final attr = _findAttr(field);
+
+        if (attr != null) {
+          if (attr is EnumAttribute) {
+            return "${attr.name}.values[json['${field.name}'] as int]";
+          }
+          if (attr is ListAttribute) {
+            return "${attr.name}[json['${field.name}'] as int]";
+          }
+        }
+
+        if (field.type.subtype != null) {
+          if (field.type.subtype.isPrimitive) {
+            return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
+          } else {
+            final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.baseType, orElse: () => null);
+
+            if (attr != null) {
+              String attrFromJson;
+              if (attr is EnumAttribute) {
+                attrFromJson = "${attr.name}.values[json as int]";
+              }
+              else if (attr is ListAttribute) {
+                attrFromJson = "${attr.name}[json as int]";
+              }
+              return "(json['${field.name}'] as List).map((json) => $attrFromJson)";
+            }
+
+            return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json))";
+          }
+        } else {
+          return "json['${field.name}']";
+        }
+      });
+
+      return
+'''
+    ${entity.name}(
+      $fromJsonFields
+    );
+'''.trim();
+    }
   }
 
   Attribute _findAttr(EntityField field) => get<Application>().attributes.firstWhere((attr) => attr.name == field.type.baseType, orElse: () => null);

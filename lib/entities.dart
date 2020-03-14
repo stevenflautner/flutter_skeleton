@@ -49,17 +49,24 @@ abstract class DataObj {
 
 class Entity extends DataObj {
   List<EntityField> fields;
+  bool customClientDeserializer;
 
-  Entity(String name, this.fields) : super(name);
+  Entity(String name, this.fields, this.customClientDeserializer) : super(name);
 
-  Map<String, dynamic> toJson() => <String, dynamic> {
-    'name': name,
-    'fields': fields,
-  };
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic> {
+      'name': name,
+      'fields': fields,
+    };
+    if (customClientDeserializer)
+      map['customClientDeserializer'] = customClientDeserializer;
+    return map;
+  }
   factory Entity.fromJson(Map<String, dynamic> json) {
     return Entity(
       json['name'],
       (json['fields'] as List).map((json) => EntityField.fromJson(json)).toList(),
+      json['customClientDeserializer'] ?? false,
     );
   }
 }
