@@ -33,7 +33,7 @@ class Application {
     _name = split[split.length - 2];
     serverKotlinPackage = '';
 //    serverSrcPath = serverRootPath;
-        initServerPath();
+    initServerPath();
 
     await _loadData();
   }

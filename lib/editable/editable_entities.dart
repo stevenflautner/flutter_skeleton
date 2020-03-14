@@ -100,6 +100,14 @@ class ${entity.name} {
   
   factory ${entity.name}.fromJson(Map<String, dynamic> json) =>
     $fromJson
+
+  Map<String, dynamic> _backingFields;
+  Map<String, dynamic> _getBackingFields() {
+    if (_backingFields == null) {
+      _backingFields = {};
+    }
+    return _backingFields;
+  }
 }
 '''.trim();
   }
