@@ -55,9 +55,9 @@ part of '../entities.dart';
 
   @override
   String writeClientObjString(Entity entity) {
-    final fields = writeFor(entity.fields, 1, '\n', (EntityField field) {
-      if (!field.clientProperty) return null;
+    final filteredFields = entity.fields.where((field) => field.clientProperty);
 
+    final fields = writeFor(filteredFields, 1, '\n', (EntityField field) {
       final attr = _findAttr(field);
 
       String leadingFinal = field.clientModifiable ? '' : 'final ';
@@ -69,15 +69,11 @@ part of '../entities.dart';
       return '$leadingFinal${field.type.dartString} ${field.name};';
     });
 
-    final constructor = writeFor(entity.fields, 0, ', ', (EntityField field) {
-      if (!field.clientProperty) return null;
-
+    final constructor = writeFor(filteredFields, 0, ', ', (EntityField field) {
       return 'this.${field.name}';
     });
 
-    final toJson = writeFor(entity.fields, 2, ',\n', (EntityField field) {
-      if (!field.clientProperty) return null;
-
+    final toJson = writeFor(filteredFields, 2, ',\n', (EntityField field) {
       final attr = _findAttr(field);
 
       if (attr != null) {
@@ -92,7 +88,7 @@ part of '../entities.dart';
       return "'${field.name}': ${field.name}";
     });
 
-    String fromJson = _writeFromJson(entity);
+    String fromJson = _writeFromJson(entity, filteredFields);
 
     return
 '''
@@ -111,11 +107,11 @@ class ${entity.name} extends Entity {
 '''.trim();
   }
 
-  String _writeFromJson(Entity entity) {
+  String _writeFromJson(Entity entity, List<EntityField> filteredFields) {
     final buffer = StringBuffer();
 
     String fromJsonPrivate = entity.customClientDeserializer ? '_' : '';
-    String fromJsonFields = _writeFromJsonFields(entity);
+    String fromJsonFields = _writeFromJsonFields(entity, filteredFields);
 
     buffer.write(
 '''
@@ -135,8 +131,8 @@ class ${entity.name} extends Entity {
     return buffer.toString();
   }
 
-  String _writeFromJsonFields(Entity entity) {
-    return writeFor(entity.fields, 3, ',\n', (EntityField field) {
+  String _writeFromJsonFields(Entity entity, List<EntityField> filteredFields) {
+    return writeFor(filteredFields, 3, ',\n', (EntityField field) {
       if (!field.clientProperty) return null;
 
       final attr = _findAttr(field);
