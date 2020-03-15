@@ -61,7 +61,8 @@ class EditableAttributes extends EditableData<Attribute> {
       return
 '''
 enum class ${attr.name} {
-  $values
+  $values;
+  companion object
 }
 ''';
     }
