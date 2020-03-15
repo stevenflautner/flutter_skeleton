@@ -124,6 +124,7 @@ class ${entity.name} extends Entity {
   factory ${entity.name}.fromJson(Map<String, dynamic> json) => _${entity.name}FromJson(json);
 '''.trim());
     }
+    return buffer.toString();
   }
 
   String _writeFromJsonFields(Entity entity) {
