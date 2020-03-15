@@ -44,8 +44,8 @@ class Application {
     if (typeMatch == null)
       throw 'mainClassName could not be identified';
 
-    serverKotlinPackage = typeMatch.group(1);
-    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverKotlinPackage.replaceAll('.', '/')}/managed';
+    serverKotlinPackage = '${typeMatch.group(1)}.managed.g';
+    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverKotlinPackage.replaceAll('.', '/')}/managed/g';
   }
 
   Future<void> _loadData() async {
