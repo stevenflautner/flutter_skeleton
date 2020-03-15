@@ -121,7 +121,7 @@ class ${entity.name} extends Entity {
       buffer..write('\n\n')
             ..write(
 '''
-  factory ${entity.name}.fromJson(Map<String, dynamic> json) => ${entity.name}FromJson(json);
+  factory ${entity.name}.fromJson(Map<String, dynamic> json) => _${entity.name}FromJson(json);
 '''.trim());
     }
   }
