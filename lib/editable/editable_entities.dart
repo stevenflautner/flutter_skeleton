@@ -42,6 +42,7 @@ class EditableEntities extends EditableData<Entity> {
   String writeClientHead() {
     return
 '''
+import 'package:flutter_managed/entity.dart';
 part of '../entities.dart';
 ''';
   }
@@ -88,7 +89,7 @@ part of '../entities.dart';
 
     return
 '''
-class ${entity.name} {
+class ${entity.name} extends Entity {
 
   $fields
 
@@ -100,14 +101,6 @@ class ${entity.name} {
   
   factory ${entity.name}.fromJson(Map<String, dynamic> json) =>
     $fromJson
-
-  Map<String, dynamic> _backingFields;
-  Map<String, dynamic> _getBackingFields() {
-    if (_backingFields == null) {
-      _backingFields = {};
-    }
-    return _backingFields;
-  }
 }
 '''.trim();
   }
