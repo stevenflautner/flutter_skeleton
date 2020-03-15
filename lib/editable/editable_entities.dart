@@ -84,7 +84,7 @@ part of '../entities.dart';
       return "'${field.name}': ${field.name}";
     });
 
-    String fromJsonFuncName = entity.customClientDeserializer ? '_${entity.name}' : entity.name;
+    String fromJsonPrivate = entity.customClientDeserializer ? '_' : '';
     String fromJsonFields = _writeFromJsonFields(entity);
 
     return
@@ -99,7 +99,7 @@ class ${entity.name} extends Entity {
     $toJson
   };
   
-  factory $fromJsonFuncName.fromJson(Map<String, dynamic> json) =>
+  factory ${entity.name}.${fromJsonPrivate}fromJson(Map<String, dynamic> json) =>
     ${entity.name}(
       $fromJsonFields
     );
