@@ -160,10 +160,10 @@ class ${entity.name} extends Entity {
             else if (attr is ListAttribute) {
               attrFromJson = "${attr.name}[json as int]";
             }
-            return "(json['${field.name}'] as List).map((json) => $attrFromJson)";
+            return "(json['${field.name}'] as List).map((json) => $attrFromJson).toList()";
           }
 
-          return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json))";
+          return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json)).toList()";
         }
       } else {
         return "json['${field.name}']";
