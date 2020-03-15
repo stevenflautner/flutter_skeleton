@@ -76,14 +76,18 @@ class EntityField {
   Type type;
   bool serverModifiable;
   bool clientModifiable;
+  bool serverProperty;
+  bool clientProperty;
 
-  EntityField(this.name, this.type, this.serverModifiable, this.clientModifiable);
+  EntityField(this.name, this.type, this.serverModifiable, this.clientModifiable, this.serverProperty, this.clientProperty);
 
   Map<String, dynamic> toJson() => <String, dynamic> {
     'name': name,
     'type': type.fullTypeString,
     'serverModifiable': serverModifiable,
     'clientModifiable': clientModifiable,
+    'serverProperty': serverProperty,
+    'clientProperty': clientProperty,
   };
   factory EntityField.fromJson(Map<String, dynamic> json) {
     return EntityField(
@@ -91,6 +95,8 @@ class EntityField {
       Type(json['type']),
       json['serverModifiable'],
       json['clientModifiable'],
+      json['serverProperty'] ?? true,
+      json['clientProperty'] ?? true,
     );
   }
 }

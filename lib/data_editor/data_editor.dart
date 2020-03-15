@@ -91,7 +91,11 @@ abstract class EditableData<T> extends ChangeNotifier {
       if (!isFirst) {
         values.write(leading);
       }
-      values.write(writer(value));
+
+      final written = writer(value);
+      if (written != null)
+        values.write(written);
+
       if (!isLast) {
         values.write(trailing);
       }

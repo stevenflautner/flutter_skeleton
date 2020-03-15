@@ -21,15 +21,17 @@ class EditableEntities extends EditableData<Entity> {
   }
 
   void addField(Entity entity, String newFieldName, String newfieldType) {
-    entity.fields.add(EntityField(newFieldName, Type(newfieldType), false, false));
+    entity.fields.add(EntityField(newFieldName, Type(newfieldType), false, false, true, true));
     notify();
   }
 
-  void modifyField(EntityField field, String newFieldName, String newfieldType, bool newServerModifiable, bool newClientModifiable) {
+  void modifyField(EntityField field, String newFieldName, String newfieldType, bool newServerModifiable, bool newClientModifiable, bool newServerProperty, bool newClientPropertyy) {
     field.name = newFieldName;
     field.type = Type(newfieldType);
     field.serverModifiable = newServerModifiable;
     field.clientModifiable = newClientModifiable;
+    field.serverProperty = newServerProperty;
+    field.clientProperty = newClientPropertyy;
     notify();
   }
 
@@ -54,6 +56,8 @@ part of '../entities.dart';
   @override
   String writeClientObjString(Entity entity) {
     final fields = writeFor(entity.fields, 1, '\n', (EntityField field) {
+      if (!field.clientProperty) return null;
+
       final attr = _findAttr(field);
 
       String leadingFinal = field.clientModifiable ? '' : 'final ';
@@ -66,10 +70,14 @@ part of '../entities.dart';
     });
 
     final constructor = writeFor(entity.fields, 0, ', ', (EntityField field) {
+      if (!field.clientProperty) return null;
+
       return 'this.${field.name}';
     });
 
     final toJson = writeFor(entity.fields, 2, ',\n', (EntityField field) {
+      if (!field.clientProperty) return null;
+
       final attr = _findAttr(field);
 
       if (attr != null) {
@@ -129,6 +137,8 @@ class ${entity.name} extends Entity {
 
   String _writeFromJsonFields(Entity entity) {
     return writeFor(entity.fields, 3, ',\n', (EntityField field) {
+      if (!field.clientProperty) return null;
+
       final attr = _findAttr(field);
 
       if (attr != null) {

@@ -22,6 +22,8 @@ class EntityObjView extends StatelessWidget {
     const typeId = 'Type';
     const serverModifiableId = 'Server modifiable';
     const clientModifiableId = 'Client modifiable';
+    const serverPropertyId = 'Server property';
+    const clientPropertyId = 'Client property';
     entity.fields.forEach((EntityField field) {
       void onTap() {
         showDialog(
@@ -47,9 +49,11 @@ class EntityObjView extends StatelessWidget {
                         final newFieldType = values[typeId].toString();
                         final newServerModifiable = values[serverModifiableId] as bool;
                         final newClientModifiable = values[clientModifiableId] as bool;
+                        final newServerProperty = values[serverPropertyId] as bool;
+                        final newClientProperty = values[clientPropertyId] as bool;
 
                         (context.get<EditableData>() as EditableEntities)
-                            .modifyField(field, newFieldName, newFieldType, newServerModifiable, newClientModifiable);
+                            .modifyField(field, newFieldName, newFieldType, newServerModifiable, newClientModifiable, newServerProperty, newClientProperty);
                         Navigator.pop(context);
                       }
                     ),
