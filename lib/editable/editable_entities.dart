@@ -84,8 +84,7 @@ part of '../entities.dart';
       return "'${field.name}': ${field.name}";
     });
 
-    String fromJsonPrivate = entity.customClientDeserializer ? '_' : '';
-    String fromJsonFields = _writeFromJsonFields(entity);
+    String fromJson = _writeFromJson(entity);
 
     return
 '''
@@ -99,12 +98,32 @@ class ${entity.name} extends Entity {
     $toJson
   };
   
+  $fromJson
+}
+'''.trim();
+  }
+
+  String _writeFromJson(Entity entity) {
+    final buffer = StringBuffer();
+
+    String fromJsonPrivate = entity.customClientDeserializer ? '_' : '';
+    String fromJsonFields = _writeFromJsonFields(entity);
+
+    buffer.write(
+'''
   factory ${entity.name}.${fromJsonPrivate}fromJson(Map<String, dynamic> json) =>
     ${entity.name}(
       $fromJsonFields
     );
-}
-'''.trim();
+'''.trim());
+
+    if (entity.customClientDeserializer) {
+      buffer..write('\n\n')
+            ..write(
+'''
+  factory ${entity.name}.fromJson(Map<String, dynamic> json) => ${entity.name}FromJson(json);
+'''.trim());
+    }
   }
 
   String _writeFromJsonFields(Entity entity) {
