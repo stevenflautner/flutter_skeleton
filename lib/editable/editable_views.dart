@@ -38,7 +38,9 @@ class EntityObjView extends StatelessWidget {
                 },
                 checkboxes: {
                   serverModifiableId: field.serverModifiable,
-                  clientModifiableId: field.clientModifiable
+                  clientModifiableId: field.clientModifiable,
+                  serverPropertyId: field.serverProperty,
+                  clientPropertyId: field.clientProperty
                 },
                 buttonsBuilder: (context, values) {
                   return [
