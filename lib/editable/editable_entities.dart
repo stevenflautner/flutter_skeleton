@@ -42,7 +42,6 @@ class EditableEntities extends EditableData<Entity> {
   String writeClientHead() {
     return
 '''
-import 'package:flutter_managed/entity.dart';
 part of '../entities.dart';
 ''';
   }
@@ -85,7 +84,8 @@ part of '../entities.dart';
       return "'${field.name}': ${field.name}";
     });
 
-    String fromJson = _writeFromJson(entity);
+    String fromJsonFuncName = entity.customClientDeserializer ? '_${entity.name}' : entity.name;
+    String fromJsonFields = _writeFromJsonFields(entity);
 
     return
 '''
@@ -99,61 +99,50 @@ class ${entity.name} extends Entity {
     $toJson
   };
   
-  factory ${entity.name}.fromJson(Map<String, dynamic> json) =>
-    $fromJson
+  factory $fromJsonFuncName.fromJson(Map<String, dynamic> json) =>
+    ${entity.name}(
+      $fromJsonFields
+    );
 }
 '''.trim();
   }
 
-  String _writeFromJson(Entity entity) {
-    if (entity.customClientDeserializer) {
-return '''
-    ${entity.name}Deserializer(json);
-'''.trim();
-    } else {
-      final fromJsonFields = writeFor(entity.fields, 3, ',\n', (EntityField field) {
-        final attr = _findAttr(field);
+  String _writeFromJsonFields(Entity entity) {
+    return writeFor(entity.fields, 3, ',\n', (EntityField field) {
+      final attr = _findAttr(field);
 
-        if (attr != null) {
-          if (attr is EnumAttribute) {
-            return "${attr.name}.values[json['${field.name}'] as int]";
-          }
-          if (attr is ListAttribute) {
-            return "${attr.name}[json['${field.name}'] as int]";
-          }
+      if (attr != null) {
+        if (attr is EnumAttribute) {
+          return "${attr.name}.values[json['${field.name}'] as int]";
         }
+        if (attr is ListAttribute) {
+          return "${attr.name}[json['${field.name}'] as int]";
+        }
+      }
 
-        if (field.type.subtype != null) {
-          if (field.type.subtype.isPrimitive) {
-            return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
-          } else {
-            final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.baseType, orElse: () => null);
-
-            if (attr != null) {
-              String attrFromJson;
-              if (attr is EnumAttribute) {
-                attrFromJson = "${attr.name}.values[json as int]";
-              }
-              else if (attr is ListAttribute) {
-                attrFromJson = "${attr.name}[json as int]";
-              }
-              return "(json['${field.name}'] as List).map((json) => $attrFromJson)";
-            }
-
-            return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json))";
-          }
+      if (field.type.subtype != null) {
+        if (field.type.subtype.isPrimitive) {
+          return "json['${field.name}'].cast<${field.type.subtype.dartString}>()";
         } else {
-          return "json['${field.name}']";
-        }
-      });
+          final attr = get<Application>().attributes.firstWhere((attr) => attr.name == field.type.subtype.baseType, orElse: () => null);
 
-      return
-'''
-    ${entity.name}(
-      $fromJsonFields
-    );
-'''.trim();
-    }
+          if (attr != null) {
+            String attrFromJson;
+            if (attr is EnumAttribute) {
+              attrFromJson = "${attr.name}.values[json as int]";
+            }
+            else if (attr is ListAttribute) {
+              attrFromJson = "${attr.name}[json as int]";
+            }
+            return "(json['${field.name}'] as List).map((json) => $attrFromJson)";
+          }
+
+          return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json))";
+        }
+      } else {
+        return "json['${field.name}']";
+      }
+    });
   }
 
   Attribute _findAttr(EntityField field) => get<Application>().attributes.firstWhere((attr) => attr.name == field.type.baseType, orElse: () => null);
