@@ -50,7 +50,12 @@ part of '../entities.dart';
 
   @override
   String writeServerHead() {
-    return 'package ${get<Application>().serverKotlinPackage}';
+    return
+'''
+package ${get<Application>().serverKotlinPackage}
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+'''.trim();
   }
 
   @override

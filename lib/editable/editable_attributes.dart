@@ -48,7 +48,14 @@ class EditableAttributes extends EditableData<Attribute> {
 
   @override
   String writeServerHead() {
-    return 'package ${get<Application>().serverKotlinPackage}';
+    return
+'''
+package ${get<Application>().serverKotlinPackage}
+
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.JsonSerializer
+import com.fasterxml.jackson.databind.SerializerProvider
+'''.trim();
   }
 
   @override
