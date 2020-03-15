@@ -55,7 +55,7 @@ part of '../entities.dart';
 
   @override
   String writeClientObjString(Entity entity) {
-    final filteredFields = entity.fields.where((field) => field.clientProperty);
+    final filteredFields = entity.fields.where((field) => field.clientProperty).toList();
 
     final fields = writeFor(filteredFields, 1, '\n', (EntityField field) {
       final attr = _findAttr(field);
