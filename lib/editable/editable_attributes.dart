@@ -76,6 +76,12 @@ enum class ${attr.name} {
 val ${attr.name} = arrayOf(
   $values
 )
+
+class ${attr.name}Serializer : JsonSerializer<${attr.type.subtype.baseType}>() {
+    override fun serialize(value: ${attr.type.subtype.baseType}, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeNumber(${attr.name}.indexOf(value))
+    }
+}
 ''';
     }
   }

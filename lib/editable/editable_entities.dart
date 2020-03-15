@@ -181,7 +181,8 @@ class ${entity.name} extends Entity {
       String leadingType = field.serverModifiable ? 'var' : 'val';
 
       if (attr != null && attr is ListAttribute) {
-        return '$leadingType ${field.name}: ${attr.type.subtype.baseType}';
+        String serializer = "@JsonSerialize(using = ${attr.name}Serializer::class)";
+        return '$serializer $leadingType ${field.name}: ${attr.type.subtype.baseType}';
       }
 
       return '$leadingType ${field.name}: ${field.type.fullTypeString}';
