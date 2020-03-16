@@ -171,7 +171,11 @@ class ${entity.name} extends Entity {
           return "(json['${field.name}'] as List).map((json) => ${field.type.subtype.dartString}.fromJson(json)).toList()";
         }
       } else {
-        return "json['${field.name}']";
+        if (field.type.isPrimitive) {
+          return "json['${field.name}']";
+        } else {
+          return "${field.type.baseType}.fromJson(json['${field.name}'])";
+        }
       }
     });
   }
