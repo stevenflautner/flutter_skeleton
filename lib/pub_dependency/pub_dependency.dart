@@ -11,9 +11,10 @@ abstract class PubDependency {
 
   String serialize();
 
-  static PubDependency fromJson(Map<String, dynamic> json) {
+  static PubDependency fromYaml(Map<String, dynamic> json) {
     return allDependencies[json['name']];
   }
+  Map<String, dynamic> toYaml();
 }
 
 class GitPubDependency extends PubDependency {
@@ -31,7 +32,7 @@ class GitPubDependency extends PubDependency {
       url: $url''';
   }
 
-  Map<String, dynamic> toJson() => <String, dynamic> {
+  Map<String, dynamic> toYaml() => <String, dynamic> {
     'name': name
   };
 }

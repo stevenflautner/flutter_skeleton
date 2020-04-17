@@ -1,11 +1,16 @@
 import 'package:flutter_manager/data_editor/data_editor.dart';
 import 'package:flutter_manager/editable/editable_views.dart';
 import 'package:flutter_manager/entities.dart';
+import 'package:flutter_manager/framework/skeleton.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_managed/locator.dart';
 
 class EditableEntities extends EditableData<Entity> {
+
+  EditableEntities() {
+//    GrpcBone().writeAll();
+  }
 
   Entity add(String entityName) {
     final entity = Entity(entityName, [], false);
@@ -52,7 +57,7 @@ part of '../entities.dart';
   String writeServerHead() {
     return
 '''
-package ${get<Application>().serverKotlinPackage}
+package ${serverDataKotlinPackage}
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 '''.trim();

@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_manager/entities.dart';
+import 'package:flutter_manager/framework/skeleton.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_managed/locator.dart';
 
-abstract class EditableData<T> extends ChangeNotifier {
+abstract class EditableData<T extends DataElement> extends ChangeNotifier {
 
   void remove(T obj) {
     getData().remove(obj);
@@ -25,17 +26,20 @@ abstract class EditableData<T> extends ChangeNotifier {
     _writeHead(clientStringBuffer, serverStringBuffer);
 
     getData().forEach((obj) {
+      final clientObjString = writeClientObjString(obj)?.trim();
+      final serverObjString = writeServerObjString(obj)?.trim();
+
       clientStringBuffer
-        ..write(writeClientObjString(obj).trim())
+        ..write(clientObjString)
         ..write('\n');
       serverStringBuffer
-        ..write(writeServerObjString(obj).trim())
+        ..write(serverObjString)
         ..write('\n');
     });
 
     final app = get<Application>();
     _writeFile(app.clientSrcPath, writeFileTo(true), clientStringBuffer.toString());
-    _writeFile(app.serverSrcPath, writeFileTo(false), serverStringBuffer.toString());
+    _writeFile(app.serverDataPath, writeFileTo(false), serverStringBuffer.toString());
   }
 
   void _writeHead(StringBuffer clientStringBuffer, StringBuffer serverStringBuffer) {
@@ -59,14 +63,14 @@ abstract class EditableData<T> extends ChangeNotifier {
     final fullPath = '$basePath/$path';
     final file = File(fullPath);
     if (!file.existsSync()) {
-      file.create(recursive: true);
+      file.createSync(recursive: true);
     }
     file.writeAsStringSync(generatedString);
   }
 
-  String writeClientObjString(T obj);
-  String writeServerObjString(T obj);
-  String writeFileTo(bool isClient);
+  String writeClientObjString(T obj) => null;
+  String writeServerObjString(T obj) => null;
+  String writeFileTo(bool isClient) => null;
 
   List<T> getData();
 
@@ -99,18 +103,36 @@ abstract class EditableData<T> extends ChangeNotifier {
     return values.toString();
   }
 
+  Future<List<T>> listFromDir({ String dirPath, String regExp, T Function(String) defObj}) {
+    final completer = Completer<List<T>>();
+    final list = <T>[];
+    Directory(dirPath).list(recursive: false).listen ((file) {
+      final fileString = File(file.path).readAsStringSync();
+      final serviceMatch = RegExp(regExp);
+      serviceMatch?.allMatches(fileString)?.forEach((match) {
+        final objName = match.group(1);
+        final obj = getData().firstWhere((T obj) => obj.name == objName,
+            orElse: () => defObj(objName));
+        list.add(obj);
+      });
+    }, onDone: () {
+      completer.complete(list);
+    });
+    return completer.future;
+  }
+
 }
 
 class SelectedObject extends ChangeNotifier {
 
-  DataObj _obj;
+  DataElement _obj;
 
   void select(dynamic obj) {
     _obj = obj;
     notifyListeners();
   }
 
-  DataObj get obj => _obj;
+  DataElement get obj => _obj;
 }
 
 class Type {

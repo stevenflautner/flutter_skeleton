@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 enum AppTab {
   ENTITIES,
   ATTRIBUTES,
+  INTERCEPTORS,
   SERVICES,
   WIDGET_LIBRARY
 }

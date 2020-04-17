@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter_manager/data_editor/data_editor.dart';
 import 'package:flutter_manager/data_editor/ui/data_view.dart';
 import 'package:flutter_manager/editable/editable_attributes.dart';
 import 'package:flutter_manager/editable/editable_entities.dart';
+import 'package:flutter_manager/editable/editable_interceptors.dart';
+import 'package:flutter_manager/editable/editable_services.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter_manager/logic/tabs.dart';
 import 'package:flutter_manager/logic/widget_library.dart';
+import 'package:flutter_manager/skeleton/skeleton.dart';
 import 'package:flutter_manager/ui/column_button.dart';
 import 'package:flutter_manager/widget_library/widget_library_view.dart';
 import 'package:flutter/material.dart';
@@ -21,9 +26,8 @@ class _MainPageState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          get<Application>().name
-        ),
+        backgroundColor: Colors.black,
+        title: ProjectSync(),
       ),
       backgroundColor: Colors.grey[200],
       body: Row(
@@ -34,16 +38,20 @@ class _MainPageState extends State<MainScreen> {
             ),
             child: Column(
               children: <Widget>[
+//                MenuElement(
+//                  title: 'ENTITIES',
+//                  tab: AppTab.ENTITIES,
+//                ),
+//                MenuElement(
+//                  title: 'ATTRIBUTES',
+//                  tab: AppTab.ATTRIBUTES,
+//                ),
                 MenuElement(
-                  title: 'ENTITIES',
-                  tab: AppTab.ENTITIES,
+                  title: 'GRPC-INTERCEPTORS',
+                  tab: AppTab.INTERCEPTORS,
                 ),
                 MenuElement(
-                  title: 'ATTRIBUTES',
-                  tab: AppTab.ATTRIBUTES,
-                ),
-                MenuElement(
-                  title: 'SERVICES',
+                  title: 'GRPC-SERVICES',
                   tab: AppTab.SERVICES,
                 ),
                 MenuElement(
@@ -72,8 +80,18 @@ class _MainPageState extends State<MainScreen> {
                       create: (_) => EditableAttributes(),
                       child: EditableDataView()
                     );
+                  case AppTab.INTERCEPTORS:
+                    return ChangeNotifierProvider<EditableData>(
+                      key: UniqueKey(),
+                      create: (_) => EditableInterceptors(),
+                      child: EditableDataView()
+                    );
                   case AppTab.SERVICES:
-                    return SizedBox();
+                    return ChangeNotifierProvider<EditableData>(
+                      key: UniqueKey(),
+                      create: (_) => EditableServices(),
+                      child: EditableDataView()
+                    );
                   case AppTab.WIDGET_LIBRARY:
                     return ChangeNotifierProvider(
                       create: (_) => WidgetLibrary(),
@@ -83,6 +101,57 @@ class _MainPageState extends State<MainScreen> {
                 return SizedBox();
               },
             )
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class ProjectSync extends StatefulWidget {
+  const ProjectSync({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  _ProjectSyncState createState() => _ProjectSyncState();
+}
+
+class _ProjectSyncState extends State<ProjectSync> {
+
+  bool _syncing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        if (_syncing) return;
+        setState(() {
+          _syncing = true;
+        });
+
+        final generateProto = await Process.run('../gradlew', ['generateProto', 'extractProto'],
+          workingDirectory: serverRootPath
+        );
+        if (generateProto.exitCode == 0) {
+          await skeleton.run();
+        } else {
+          print(generateProto.stderr);
+        }
+
+        setState(() {
+          _syncing = false;
+        });
+      },
+      child: Row(
+        children: <Widget>[
+          Text(
+            get<Application>().name
+          ),
+          Icon(
+            Icons.sync,
+            size: 35,
+            color: _syncing ? Colors.grey : Colors.greenAccent,
           )
         ],
       ),
@@ -107,7 +176,7 @@ class MenuElement extends StatelessWidget {
           },
           child: ColumnButton(
             text: title,
-            fontSize: 20,
+            fontSize: 15,
             selected: tabs.selected == tab,
             selectedBgColor: Colors.grey[600],
             selectedFontColor: Colors.white,

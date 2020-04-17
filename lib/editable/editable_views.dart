@@ -3,8 +3,11 @@ import 'package:flutter_manager/data_editor/ui/data_dialogs.dart';
 import 'package:flutter_manager/data_editor/ui/data_view.dart';
 import 'package:flutter_manager/editable/editable_attributes.dart';
 import 'package:flutter_manager/editable/editable_entities.dart';
+import 'package:flutter_manager/editable/editable_interceptors.dart';
+import 'package:flutter_manager/editable/editable_services.dart';
 import 'package:flutter_manager/entities.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_manager/logic/app.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_managed/locator.dart';
 
@@ -398,6 +401,185 @@ class AddEntityDialog extends StatelessWidget {
   }
 }
 
+class ServicesObjView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final selectedObj = context.get<SelectedObject>();
+    final editableData = context.get<EditableData>() as EditableServices;
+    final service = selectedObj.obj as Service;
+
+    return SingleChildScrollView(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  SizedBox(width: 10),
+//                  Text('Type: ${service.type.fullTypeString}', style: const TextStyle(
+//                      fontWeight: FontWeight.bold,
+//                      fontSize: 20
+//                  )),
+                ],
+              ),
+              SizedBox(height: 10),
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _buildInterceptorList(context, service)
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildInterceptorList(BuildContext context, Service service) {
+    final interceptorList = get<Application>().data.interceptors;
+    return List.generate(interceptorList.length, (index) {
+      final interceptor = interceptorList[index];
+      return Row(
+        children: <Widget>[
+          Text('${index + 1}.'),
+          SizedBox(width: 10),
+          Text(interceptor.name),
+          SizedBox(width: 10),
+          Checkbox(
+            onChanged: (bool value) {  },
+            value: true,
+          ),
+        ],
+      );
+    });
+    return [
+      Row(
+        children: <Widget>[
+          Text('asdad'),
+          SizedBox(width: 10),
+          Checkbox(
+            onChanged: (bool value) {  },
+            value: true,
+          ),
+        ],
+      )
+    ];
+  }
+
+  List<Widget> _buildFieldList(BuildContext context, Attribute attr) {
+    if (attr is ValueAttribute) {
+      return [
+        for (String value in attr.values) ...{
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: GestureDetector(
+              onTap: () {
+                DataDialog.show(
+                    context: context,
+                    dialog: DataDialog(
+                      fields: {
+                        'Value': value
+                      },
+                      buttonsBuilder: (context, values) {
+                        return [
+                          DataDialogButton(
+                              text: 'Save',
+                              onPressed: (values) {
+                                final newValue = values['Value'].toString();
+                                (context.get<EditableData>() as EditableAttributes)
+                                    .modifyValue(attr, value, newValue);
+                                Navigator.of(context).pop();
+                              }
+                          ),
+                          DataDialogButton(
+                              text: 'Delete',
+                              bgColor: Colors.red,
+                              onPressed: (values) {
+                                (context.get<EditableData>() as EditableAttributes)
+                                    .removeValue(attr, value);
+                                Navigator.of(context).pop();
+                              }
+                          )
+                        ];
+                      },
+                    )
+                );
+              },
+              child: Text(value, style: TextStyle(
+                  fontSize: 25
+              )),
+            ),
+          )
+        }
+      ];
+    }
+    throw 'no impl found';
+  }
+
+  DataDialog _buildEditDialog(BuildContext context, Service service) {
+    final attrNameId = 'Attribute name';
+
+    return DataDialog(
+      fields: {
+        attrNameId: service.name,
+      },
+      buttonsBuilder: (context, values) {
+        return [
+          DataDialogButton(
+              text: 'Save',
+              onPressed: (values) {
+                final newAttrName = values[attrNameId].toString();
+//                final newAttrType = controllers['Type'].text;
+
+//                (context.get<EditableData>() as EditableAttributes)
+//                    .modifyAttr(service, newAttrName);
+                context.get<SelectedObject>().select(service);
+                Navigator.pop(context);
+              }
+          ),
+          DataDialogButton(
+              text: 'Delete',
+              bgColor: Colors.red,
+              onPressed: (values) {
+                context.get<EditableData>().remove(service);
+                context.get<SelectedObject>().select(null);
+                Navigator.pop(context);
+              }
+          )
+        ];
+      },
+    );
+  }
+}
+
+class AddServiceDialog extends StatelessWidget {
+  final serviceNameId = 'Service name';
+
+  @override
+  Widget build(BuildContext context) {
+    return DataDialog(
+      fields: {
+        serviceNameId: null
+      },
+      buttonsBuilder: (context, values) {
+        return [
+          DataDialogButton(
+              text: 'Save',
+              onPressed: (values) {
+                final serviceName = values[serviceNameId].toString();
+
+                final service = (context.get<EditableData>() as EditableServices).add(serviceName);
+                context.get<SelectedObject>().select(service);
+                Navigator.pop(context);
+              }
+          )
+        ];
+      },
+    );
+  }
+}
+
 //class EntityFieldDialog extends StatefulWidget {
 //
 //  final String entityName;
@@ -448,3 +630,175 @@ class AddEntityDialog extends StatelessWidget {
 //    );
 //  }
 //}
+
+class InterceptorsObjView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+    final selectedObj = context.get<SelectedObject>();
+    final editableData = context.get<EditableData>() as EditableServices;
+    final service = selectedObj.obj as Service;
+
+    return SingleChildScrollView(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  ObjView.buildEditButton(
+                      context: context,
+                      dialog: _buildEditDialog(context, service)
+                  ),
+                  SizedBox(width: 10),
+//                  Text('Type: ${service.type.fullTypeString}', style: const TextStyle(
+//                      fontWeight: FontWeight.bold,
+//                      fontSize: 20
+//                  )),
+                ],
+              ),
+              SizedBox(height: 10),
+//              Column(
+//                  crossAxisAlignment: CrossAxisAlignment.start,
+//                  children: _buildFieldList(context, service)
+//              ),
+//              ObjView.buildNewButton(
+//                  context: context,
+//                  dialog: DataDialog(
+//                    fields: const {
+//                      'Value': null
+//                    },
+//                    buttonsBuilder: (context, values) {
+//                      return [
+//                        DataDialogButton(
+//                            text: 'Save',
+//                            onPressed: (values) {
+//                              editableData.addValue(service, values['Value'].toString());
+//                              Navigator.of(context).pop();
+//                            }
+//                        )
+//                      ];
+//                    },
+//                  )
+//              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildFieldList(BuildContext context, Attribute attr) {
+    if (attr is ValueAttribute) {
+      return [
+        for (String value in attr.values) ...{
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: GestureDetector(
+              onTap: () {
+                DataDialog.show(
+                    context: context,
+                    dialog: DataDialog(
+                      fields: {
+                        'Value': value
+                      },
+                      buttonsBuilder: (context, values) {
+                        return [
+                          DataDialogButton(
+                              text: 'Save',
+                              onPressed: (values) {
+                                final newValue = values['Value'].toString();
+                                (context.get<EditableData>() as EditableAttributes)
+                                    .modifyValue(attr, value, newValue);
+                                Navigator.of(context).pop();
+                              }
+                          ),
+                          DataDialogButton(
+                              text: 'Delete',
+                              bgColor: Colors.red,
+                              onPressed: (values) {
+                                (context.get<EditableData>() as EditableAttributes)
+                                    .removeValue(attr, value);
+                                Navigator.of(context).pop();
+                              }
+                          )
+                        ];
+                      },
+                    )
+                );
+              },
+              child: Text(value, style: TextStyle(
+                  fontSize: 25
+              )),
+            ),
+          )
+        }
+      ];
+    }
+    throw 'no impl found';
+  }
+
+  DataDialog _buildEditDialog(BuildContext context, Service service) {
+    final attrNameId = 'Attribute name';
+
+    return DataDialog(
+      fields: {
+        attrNameId: service.name,
+      },
+      buttonsBuilder: (context, values) {
+        return [
+          DataDialogButton(
+              text: 'Save',
+              onPressed: (values) {
+                final newAttrName = values[attrNameId].toString();
+//                final newAttrType = controllers['Type'].text;
+
+//                (context.get<EditableData>() as EditableAttributes)
+//                    .modifyAttr(service, newAttrName);
+                context.get<SelectedObject>().select(service);
+                Navigator.pop(context);
+              }
+          ),
+          DataDialogButton(
+              text: 'Delete',
+              bgColor: Colors.red,
+              onPressed: (values) {
+                context.get<EditableData>().remove(service);
+                context.get<SelectedObject>().select(null);
+                Navigator.pop(context);
+              }
+          )
+        ];
+      },
+    );
+  }
+}
+
+class AddInterceptorDialog extends StatelessWidget {
+  final interceptorNameId = 'Interceptor name';
+
+  @override
+  Widget build(BuildContext context) {
+    return DataDialog(
+      fields: {
+        interceptorNameId: null
+      },
+      buttonsBuilder: (context, values) {
+        return [
+          DataDialogButton(
+              text: 'Save',
+              onPressed: (values) {
+                final interceptorName = values[interceptorNameId].toString();
+
+                final service = (context.get<EditableData>() as EditableInterceptors).add(interceptorName);
+                context.get<SelectedObject>().select(service);
+                Navigator.pop(context);
+              }
+          )
+        ];
+      },
+    );
+  }
+}

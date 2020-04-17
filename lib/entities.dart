@@ -1,59 +1,47 @@
+import 'package:flutter_managed/dependency.dart';
+import 'package:flutter_manager/framework/skeleton.dart';
 import 'package:flutter_manager/pub_dependency/pub_dependency.dart';
+import 'package:path/path.dart';
 import 'data_editor/data_editor.dart';
 
 class Data {
   final List<Entity> entities;
   final List<Attribute> attributes;
   final List<PubDependency> dependencies;
+  final List<Interceptor> interceptors;
+  final List<Service> services;
 
-  Data(this.entities, this.attributes, this.dependencies);
+  Data(this.entities, this.attributes, this.dependencies, this.interceptors, this.services);
 
-  Map<String, dynamic> toJson() => <String, dynamic> {
-    'entities': entities,
-    'attributes': attributes,
-    'dependencies': dependencies,
+  Map<String, dynamic> toYaml() => <String, dynamic> {
+    'entities': entities.map((e) => e.toYaml()),
+    'attributes': attributes.map((e) => e.toYaml()),
+    'dependencies': dependencies.map((e) => e.toYaml()),
+    'interceptors': interceptors.map((e) => e.toYaml()),
+    'services': services.map((e) => e.toYaml()),
   };
-  factory Data.fromJson(Map<String, dynamic> json) {
-    final dependencies = <PubDependency>[];
-    final dependenciesJson = json['dependencies'];
-    if (dependenciesJson != null) {
-      dependencies.addAll((dependenciesJson as List).map((json) => PubDependency.fromJson(json)));
-    }
-//    final entities = <String, Map<String, String>> {};
-//    (json['entities'] as Map<String, dynamic>)?.forEach((key, value) {
-//      final entity = <String, String> {};
-//      (value as Map<String, dynamic>)?.forEach((key, value) {
-//        entity[key] = value as String;
-//      });
-//      entities[key] = entity;
-//    });
-
-//    final attrs = <String, Attribute> {};
-//    (json['attributes'] as Map<String, dynamic>)?.forEach((key, value) {
-//      attrs[key] = Attribute.fromJson(value);
-//    });
-
+  factory Data.fromYaml(dynamic json) {
     return Data(
-      (json['entities'] as List).map((json) => Entity.fromJson(json)).toList(),
-      (json['attributes'] as List).map((json) => Attribute.fromJson(json)).toList(),
-      dependencies,
+      (json['entities'] as List)?.map((yaml)
+        => Entity.fromYaml(yaml))?.toList() ?? [],
+      (json['attributes'] as List)?.map((yaml)
+        => Attribute.fromYaml(yaml))?.toList() ?? [],
+      (json['dependencies'] as List)?.map((yaml)
+        => PubDependency.fromYaml(yaml))?.toList() ?? [],
+      (json['interceptors'] as List)?.map((yaml)
+        => Interceptor.fromYaml(yaml))?.toList() ?? [],
+      []
     );
   }
 }
 
-abstract class DataObj {
-  String name;
-
-  DataObj(this.name);
-}
-
-class Entity extends DataObj {
+class Entity extends DataElement {
   List<EntityField> fields;
   bool customClientDeserializer;
 
   Entity(String name, this.fields, this.customClientDeserializer) : super(name);
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toYaml() {
     final map = <String, dynamic> {
       'name': name,
       'fields': fields,
@@ -62,10 +50,15 @@ class Entity extends DataObj {
       map['customClientDeserializer'] = customClientDeserializer;
     return map;
   }
-  factory Entity.fromJson(Map<String, dynamic> json) {
+  factory Entity.fromYaml(dynamic json) {
+    final fieldsJson = json['fields'];
+    final List<EntityField> fields = fieldsJson != null
+        ? (fieldsJson as List).map((json) => EntityField.fromJson(json)).toList()
+        : [];
+
     return Entity(
       json['name'],
-      (json['fields'] as List).map((json) => EntityField.fromJson(json)).toList(),
+      fields,
       json['customClientDeserializer'] ?? false,
     );
   }
@@ -101,13 +94,13 @@ class EntityField {
   }
 }
 
-abstract class Attribute extends DataObj {
+abstract class Attribute extends DataElement {
 
   final Type type;
 
   Attribute(String name, this.type) : super(name);
 
-  factory Attribute.fromJson(Map<String, dynamic> json) {
+  factory Attribute.fromYaml(dynamic json) {
     final type = Type(json['type']);
 
     switch (type.baseType) {
@@ -120,6 +113,7 @@ abstract class Attribute extends DataObj {
     }
     throw 'No deserializer found for type: ${json['type']}';
   }
+  Map<String, dynamic> toYaml();
 }
 
 abstract class ValueAttribute extends Attribute {
@@ -133,12 +127,12 @@ class EnumAttribute extends ValueAttribute {
 
   EnumAttribute(String name, List<String> values) : super(name, Type('Enum'), values);
 
-  Map<String, dynamic> toJson() => <String, dynamic> {
+  Map<String, dynamic> toYaml() => <String, dynamic> {
     'name': name,
     'type': type.fullTypeString,
     'values': values,
   };
-  factory EnumAttribute.fromJson(Map<String, dynamic> json) {
+  factory EnumAttribute.fromJson(dynamic json) {
     return EnumAttribute(
       json['name'],
       json['values'].cast<String>()
@@ -150,16 +144,54 @@ class ListAttribute extends ValueAttribute {
 
   ListAttribute(String name, Type type, List<String> values) : super(name, type, values);
 
-  Map<String, dynamic> toJson() => <String, dynamic> {
+  Map<String, dynamic> toYaml() => <String, dynamic> {
     'name': name,
     'type': type.fullTypeString,
     'values': values,
   };
-  factory ListAttribute.fromJson(Map<String, dynamic> json) {
+  factory ListAttribute.fromJson(dynamic json) {
     return ListAttribute(
       json['name'],
       Type(json['type']),
       json['values'].cast<String>()
+    );
+  }
+}
+
+//class Service extends Element {
+//
+//  List<String> interceptors = [];
+//
+//  Service(String name) : super(name);
+//
+//  Map<String, dynamic> toYaml() => <String, dynamic> {
+//    'name': name,
+//    'interceptors': interceptors,
+//  };
+//}
+
+class Service extends DataElement {
+
+  List<String> interceptors = [];
+
+  Service(String name) : super(name);
+
+  Map<String, dynamic> toYaml() => <String, dynamic> {
+    'name': name,
+    'interceptors': interceptors,
+  };
+}
+
+class Interceptor extends DataElement {
+
+  Interceptor(String name) : super(name);
+
+  Map<String, dynamic> toYaml() => <String, dynamic> {
+    'name': name
+  };
+  factory Interceptor.fromYaml(dynamic json) {
+    return Interceptor(
+      json['name']
     );
   }
 }

@@ -50,7 +50,7 @@ class EditableAttributes extends EditableData<Attribute> {
   String writeServerHead() {
     return
 '''
-package ${get<Application>().serverKotlinPackage}
+package $serverDataKotlinPackage
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer

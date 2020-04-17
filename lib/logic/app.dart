@@ -1,66 +1,104 @@
-import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter_manager/entities.dart';
-import 'package:flutter_manager/logic/pub_dependencies.dart';
+import 'package:flutter_manager/framework/skeleton.dart';
 import 'package:flutter_manager/pub_dependency/pub_dependency.dart';
-import 'package:flutter_manager/widget_library/widget_library_view.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_manager/skeleton/skeleton.dart';
 import 'package:path/path.dart';
+import 'package:recase/recase.dart';
+import 'package:yaml/yaml.dart';
+import 'package:yamlicious/yamlicious.dart';
 
 //const clientRootPath = 'work/client';
 //const serverRootPath = 'work/server';
 const clientRootPath = '../client';
 const serverRootPath = '../server';
+const skeletonFilePath = '../skeleton.yaml';
+const clientProjDir = '/lib/managed';
+const projDir = '/managed';
+String projName;
+String serverSrcPath;
+String serverProjPath = serverSrcPath + projDir;
+String clientSrcPath = clientRootPath + '/lib';
+String clientProjPath = clientSrcPath + projDir;
+String serverDataKotlinPackage;
 
 class Application {
 
   final _path = dirname(Platform.script.toString());
-  String serverKotlinPackage;
-  String serverSrcPath;
-  String clientSrcPath = '$clientRootPath/lib/managed/g';
+
+  String serverDataPath;
+  final String clientSrcPath = clientRootPath + '/lib/managed/g';
+
   String _name;
   Data _data;
 
   final _defaultDependencies = <PubDependency>[
     GitPubDependency(
-      'flutter_managed',
-      'http://github.com/stevenflautner/flutter_managed.git'
+        'flutter_managed',
+        'http://github.com/stevenflautner/flutter_managed.git'
     )
   ];
 
   Future<void> initialize() async {
-    final split = _path.split('/');
-    _name = split[split.length - 2];
-    serverKotlinPackage = '';
-//    serverSrcPath = serverRootPath;
-    initServerPath();
-
+    _name = _parseName();
+    projName = _parseName();
+    await initPath();
     await _loadData();
   }
 
-  void initServerPath() {
+  String _parseName() {
+    final split = _path.split('/');
+    return split[split.length - 2];
+  }
+
+  Future<void> initPath() async {
     final serverBuildGradleString = File('$serverRootPath/build.gradle').readAsStringSync();
-    final typeMatch = RegExp(r'mainClassName = "(.*).MainKt"').firstMatch(serverBuildGradleString);
-    if (typeMatch == null)
+    final serverMainClassMatch = RegExp(r'mainClassName = "(.*).MainKt"').firstMatch(serverBuildGradleString);
+    if (serverMainClassMatch == null)
       throw 'mainClassName could not be identified';
 
-    serverKotlinPackage = '${typeMatch.group(1)}.managed.g';
-    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverKotlinPackage.replaceAll('.', '/')}';
+    final serverSrcKotlinPackage = serverMainClassMatch.group(1);
+    serverDataKotlinPackage = (serverSrcKotlinPackage + projDir).dotCase;
+    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverSrcKotlinPackage.replaceAll('.', '/')}';
+    serverDataPath = '$serverRootPath/src/main/kotlin/${serverDataKotlinPackage.replaceAll('.', '/')}';
   }
 
   Future<void> _loadData() async {
-    try {
-      final json = jsonDecode(await rootBundle.loadString('assets/data.json'));
-      _data = Data.fromJson(json);
-    } catch (e) {
-      _data = Data([], [], []);
-    }
+    _data = Data([], [], [], [], []);
+//    try {
+//      _data = Data.fromYaml(
+//        loadYaml(File(skeletonFilePath).readAsStringSync())
+//      );
+//    } catch (e) {
+//      print(e);
+//      _data = Data([], [], [], [], []);
+//    }
+
+//    final interceptorListFromProject = await listFromDir(
+//        dirPath: '$serverSrcPath/interceptors',
+//        regExp: r'class (.*)Interceptor : ServerInterceptor {',
+//        writtenData: _data.interceptors,
+//        defObj: (fileName, objName) => Interceptor(objName));
+//    _data.interceptors
+//      ..clear()
+//      ..addAll(interceptorListFromProject);
+//
+//    final serviceListFromProject = await listFromDir(
+//        dirPath: serverRootPath + '/src/main/proto',
+//        regExp: r'service (.*) {',
+//        defObj: (fileName, objName) => Service(objName),
+//        writtenData: _data.services);
+//    _data.services
+//      ..clear()
+//      ..addAll(serviceListFromProject);
   }
 
   Future<void> saveData() async {
-    File('assets/data.json').writeAsStringSync(jsonEncode(_data.toJson()));
-//    final json = jsonDecode(await rootBundle.loadString('assets/data.json'));
-//    _data = Data.fromJson(json);
+    File(skeletonFilePath).writeAsStringSync(
+      toYamlString(_data.toYaml())
+    );
   }
 
   void addDependency(PubDependency dependency) {
@@ -102,8 +140,28 @@ class Application {
     list.forEach((dependency) => buffer.write('${dependency.serialize()}\n'));
   }
 
+  Future<List<T>> listFromDir<T extends DataElement>({ String dirPath, String regExp, List<T> writtenData, T Function(String, String) defObj}) {
+    final completer = Completer<List<T>>();
+    final list = <T>[];
+    Directory(dirPath).list(recursive: false).listen ((fileEntity) {
+      final fileString = File(fileEntity.path).readAsStringSync();
+      final serviceMatch = RegExp(regExp);
+      serviceMatch?.allMatches(fileString)?.forEach((match) {
+        final objName = match.group(1);
+        final obj = writtenData.firstWhere((T obj) => obj.name == objName,
+            orElse: () => defObj(basename(fileEntity.path), objName));
+        list.add(obj);
+      });
+    }, onDone: () {
+      completer.complete(list);
+    });
+    return completer.future;
+  }
+
   String get name => _name;
   List<Entity> get entities => _data.entities;
   List<Attribute> get attributes => _data.attributes;
   List<PubDependency> get dependencies => _data.dependencies;
+  List<Service> get services => _data.services;
+  Data get data => _data;
 }
