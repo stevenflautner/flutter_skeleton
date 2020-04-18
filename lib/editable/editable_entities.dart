@@ -57,7 +57,7 @@ part of '../entities.dart';
   String writeServerHead() {
     return
 '''
-package ${serverDataKotlinPackage}
+package ${server.workingDirPackage}
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 '''.trim();

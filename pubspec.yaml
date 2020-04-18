@@ -20,6 +20,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  path_provider: 1.6.5
+  file_chooser:
+    path: plugins/file_chooser
   path: any
   #  path_provider: 1.6.5
   yaml: 2.2.0

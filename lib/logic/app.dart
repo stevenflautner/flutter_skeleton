@@ -10,60 +10,119 @@ import 'package:recase/recase.dart';
 import 'package:yaml/yaml.dart';
 import 'package:yamlicious/yamlicious.dart';
 
-//const clientRootPath = 'work/client';
-//const serverRootPath = 'work/server';
-const clientRootPath = '../client';
-const serverRootPath = '../server';
-const skeletonFilePath = '../skeleton.yaml';
-const clientProjDir = '/lib/managed';
-const projDir = '/managed';
+const skeletonFilePath = 'skeleton.yaml';
 String projName;
-String serverSrcPath;
-String serverProjPath = serverSrcPath + projDir;
-String clientSrcPath = clientRootPath + '/lib';
-String clientProjPath = clientSrcPath + projDir;
-String serverDataKotlinPackage;
+Client client;
+Server server;
+
+Future<void> initialize(String workingDir) async {
+  Directory.current = Directory(workingDir);
+  projName = basename(workingDir);
+  client = Client();
+  server = Server();
+}
+
+final _defaultDependencies = <PubDependency>[
+  GitPubDependency(
+      'flutter_managed',
+      'http://github.com/stevenflautner/flutter_managed.git'
+  )
+];
+
+abstract class OPlatform {
+  static const workingDir = 'managed';
+
+  final String root;
+
+  OPlatform(this.root);
+
+  String get src;
+  String get workingPath => join(src, workingDir);
+}
+
+class Client extends OPlatform {
+  Client() : super('client');
+
+  @override
+  String get src => join(root, 'lib');
+}
+class Server extends OPlatform {
+
+  String _workingDirPackage;
+  String _src;
+
+  Server() : super('server') {
+    final buildGradle = File(join(root, 'build.gradle')).readAsStringSync();
+    final mainClassMatch = RegExp(r'mainClassName = "(.*).MainKt"')
+        .firstMatch(buildGradle);
+
+    if (mainClassMatch == null)
+      throw 'mainClassName could not be identified';
+
+    final package = mainClassMatch.group(1);
+    _src = join(root, 'src/main/kotlin', package.pathCase);
+    _workingDirPackage = join(package, OPlatform.workingDir).dotCase;
+  }
+
+  @override
+  String get src => _src;
+  String get workingDirPackage => _workingDirPackage;
+}
+
+//void _initPath() {
+//  final serverBuildGradleString = File('$serverRootPath/build.gradle').readAsStringSync();
+//  final serverMainClassMatch = RegExp(r'mainClassName = "(.*).MainKt"').firstMatch(serverBuildGradleString);
+//  if (serverMainClassMatch == null)
+//    throw 'mainClassName could not be identified';
+//
+//  final serverSrcKotlinPackage = serverMainClassMatch.group(1);
+//  serverDataKotlinPackage = (serverSrcKotlinPackage + projDir).dotCase;
+//  serverSrcPath = '$serverRootPath/src/main/kotlin/${serverSrcKotlinPackage.replaceAll('.', '/')}';
+//  serverDataPath = '$serverRootPath/src/main/kotlin/${serverDataKotlinPackage.replaceAll('.', '/')}';
+//}
 
 class Application {
 
-  final _path = dirname(Platform.script.toString());
+//  final _path = dirname(Platform.script.toString());
 
-  String serverDataPath;
-  final String clientSrcPath = clientRootPath + '/lib/managed/g';
 
-  String _name;
+//  String get path => _path;
+
+//  String serverDataPath;
+//  final String clientSrcPath = clientRootPath + '/lib/managed/g';
+
   Data _data;
 
   final _defaultDependencies = <PubDependency>[
     GitPubDependency(
-        'flutter_managed',
-        'http://github.com/stevenflautner/flutter_managed.git'
+      'flutter_managed',
+      'http://github.com/stevenflautner/flutter_managed.git'
     )
   ];
+  
 
-  Future<void> initialize() async {
-    _name = _parseName();
-    projName = _parseName();
-    await initPath();
-    await _loadData();
-  }
+//  Future<void> initialize(String _workingDir) async {
+//    workingDir = _workingDir;
+//
+//    projName = _parseName();
+//
+//
+//    await initPath();
+//    await _loadData();
+//  }
 
-  String _parseName() {
-    final split = _path.split('/');
-    return split[split.length - 2];
-  }
 
-  Future<void> initPath() async {
-    final serverBuildGradleString = File('$serverRootPath/build.gradle').readAsStringSync();
-    final serverMainClassMatch = RegExp(r'mainClassName = "(.*).MainKt"').firstMatch(serverBuildGradleString);
-    if (serverMainClassMatch == null)
-      throw 'mainClassName could not be identified';
-
-    final serverSrcKotlinPackage = serverMainClassMatch.group(1);
-    serverDataKotlinPackage = (serverSrcKotlinPackage + projDir).dotCase;
-    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverSrcKotlinPackage.replaceAll('.', '/')}';
-    serverDataPath = '$serverRootPath/src/main/kotlin/${serverDataKotlinPackage.replaceAll('.', '/')}';
-  }
+//  Future<void> initPath() async {
+//    final serverBuildGradleString = File('$serverRootPath/build.gradle').readAsStringSync();
+//    final serverMainClassMatch = RegExp(r'mainClassName = "(.*).MainKt"').firstMatch(serverBuildGradleString);
+//    if (serverMainClassMatch == null)
+//      throw 'mainClassName could not be identified';
+//
+//    final serverSrcKotlinPackage = serverMainClassMatch.group(1);
+//    serverDataKotlinPackage = (serverSrcKotlinPackage + projDir).dotCase;
+//    serverSrcPath = '$serverRootPath/src/main/kotlin/${serverSrcKotlinPackage.replaceAll('.', '/')}';
+//    serverDataPath = '$serverRootPath/src/main/kotlin/${serverDataKotlinPackage.replaceAll('.', '/')}';
+//  }
 
   Future<void> _loadData() async {
     _data = Data([], [], [], [], []);
@@ -114,7 +173,7 @@ class Application {
   }
 
   void writePubspec() {
-    final file = File('$clientRootPath/pubspec.yaml');
+    final file = File('${client.root}/pubspec.yaml');
     var fileString = file.readAsStringSync();
 
 //    const asd = "# DON'T EDIT COMMENT GENERATED BY FLUTTER_MANAGED #";
@@ -158,7 +217,6 @@ class Application {
     return completer.future;
   }
 
-  String get name => _name;
   List<Entity> get entities => _data.entities;
   List<Attribute> get attributes => _data.attributes;
   List<PubDependency> get dependencies => _data.dependencies;

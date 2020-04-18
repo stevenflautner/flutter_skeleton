@@ -5,6 +5,7 @@ import 'package:flutter_managed/locator.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter_manager/logic/tabs.dart';
 import 'package:flutter_manager/screens/main_screen.dart';
+import 'package:flutter_manager/screens/project_chooser.dart';
 import 'package:provider/provider.dart';
 //import 'package:window_size/window_size.dart' as window_size;
 //import 'dart:math' as math;
@@ -42,7 +43,6 @@ void main() {
     },
     registrator: (dependency) async {
       final app = Application();
-      await app.initialize();
       service(app);
 
       return [
@@ -51,6 +51,6 @@ void main() {
         ),
       ];
     },
-    startScreen: MainScreen()
+    startScreen: ProjectChooser()
   );
 }

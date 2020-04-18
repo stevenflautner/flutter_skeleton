@@ -120,38 +120,60 @@ class ProjectSync extends StatefulWidget {
 class _ProjectSyncState extends State<ProjectSync> {
 
   bool _syncing = false;
+  bool _error = false;
+
+  @override
+  void initState() {
+    Directory(server.root + '/src/main/proto').watch().listen((event) {
+      sync();
+    });
+    super.initState();
+  }
+
+  void sync() async {
+    if (_syncing) return;
+
+    setState(() {
+      _syncing = true;
+      _error = false;
+    });
+
+    try {
+      final generateProto = await Process.run('../gradlew', ['generateProto', 'extractProto'],
+          workingDirectory: server.root
+      );
+      if (generateProto.exitCode == 0) {
+        await skeleton.run();
+      } else {
+        print(generateProto.stderr);
+      }
+    } catch (e) {
+      print(e);
+      _error = true;
+    } finally {
+      setState(() {
+        _syncing = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    Color color =
+      _error ? Colors.red :
+      _syncing ? Colors.grey : Colors.greenAccent;
+
     return GestureDetector(
-      onTap: () async {
-        if (_syncing) return;
-        setState(() {
-          _syncing = true;
-        });
-
-        final generateProto = await Process.run('../gradlew', ['generateProto', 'extractProto'],
-          workingDirectory: serverRootPath
-        );
-        if (generateProto.exitCode == 0) {
-          await skeleton.run();
-        } else {
-          print(generateProto.stderr);
-        }
-
-        setState(() {
-          _syncing = false;
-        });
-      },
+      onTap: sync,
       child: Row(
         children: <Widget>[
           Text(
-            get<Application>().name
+            projName
           ),
           Icon(
             Icons.sync,
             size: 35,
-            color: _syncing ? Colors.grey : Colors.greenAccent,
+            color: color
           )
         ],
       ),

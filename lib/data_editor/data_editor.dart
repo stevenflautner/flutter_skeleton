@@ -38,8 +38,8 @@ abstract class EditableData<T extends DataElement> extends ChangeNotifier {
     });
 
     final app = get<Application>();
-    _writeFile(app.clientSrcPath, writeFileTo(true), clientStringBuffer.toString());
-    _writeFile(app.serverDataPath, writeFileTo(false), serverStringBuffer.toString());
+//    _writeFile(app.clientSrcPath, writeFileTo(true), clientStringBuffer.toString());
+//    _writeFile(app.serverDataPath, writeFileTo(false), serverStringBuffer.toString());
   }
 
   void _writeHead(StringBuffer clientStringBuffer, StringBuffer serverStringBuffer) {
