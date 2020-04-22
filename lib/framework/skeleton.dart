@@ -65,6 +65,7 @@ abstract class CopyFilesBone extends ListReaderBone<DataElement> with Writer {
 
   @override
   FutureOr<List<DataElement>> read(dynamic yaml) async {
+    list.clear();
     list.addAll(listFromDir(
         dirPath: fromFolder,
         regExp: regexp,

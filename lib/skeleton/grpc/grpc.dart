@@ -137,6 +137,7 @@ class GrpcServer extends FileBone {
   @override
   String write() {
     return '''
+import com.google.protobuf.DoubleValue
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.ServerInterceptors
@@ -173,17 +174,23 @@ class GrpcBone {
           return 'val $serviceName = ServerInterceptors.intercept($ServiceName(), $interceptors)';
         })}
 
-        server = ServerBuilder.forPort(${get<GrpcPort>().value})
+        val port = System.getenv("PORT")?.toInt() ?: 8080
+
+        server = ServerBuilder.forPort(port)
             ${loop(_services, 6, '\n', (Service service) {
               final serviceName = service.name.camelCase;
 
               return '.addService($serviceName)';
             })}
             .build()
+            
+        println("GRPC SERVER STARTING ON PORT: \$port")
 
         server.start().awaitTermination()
     }
 }
+
+fun Double.toGrpc() = DoubleValue { value = this@toGrpc }
     ''';
   }
 
@@ -221,6 +228,7 @@ class GrpcClient extends FileBone {
   @override
   String write() {
     return '''
+import 'package:vimpexcart/managed/grpc/g/proto/google/protobuf/wrappers.pb.dart';
 import 'package:flutter_managed/locator.dart';
 import 'package:grpc/grpc.dart';
 ${get<GrpcClientInterceptors>().import()}
@@ -233,10 +241,10 @@ class GrpcBone {
   GrpcBone(this._hostConfig) {
     final channel = ClientChannel(
       _hostConfig.host,
-      port: ${get<GrpcPort>().value},
+      port: ${get<GrpcPort>().value}, //443 On Cloud Run because TLS serves through 443
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
-    
+    //credentials: ChannelCredentials.insecure()
     ${loop(get<GrpcClientInterceptors>().list, 2, '\n', (Interceptor interceptor) {
       final interceptorName = interceptor.name.camelCase;
       final InterceptorName = interceptorName.pascalCase; // ignore: non_constant_identifier_names
@@ -265,6 +273,10 @@ service($ServiceClient(channel, options: CallOptions(
   static GrpcBoneHostConfig configureHost(String host) {
     return GrpcBoneHostConfig(host);
   }
+}
+
+extension DoubleValueParser on double  {
+  DoubleValue toGrpc() => DoubleValue()..value = this;
 }
 
 class GrpcBoneHostConfig {
