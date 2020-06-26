@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 import 'package:flutter_manager/data_editor/data_editor.dart';
 import 'package:flutter_manager/editable/editable_views.dart';
 import 'package:flutter_manager/entities.dart';

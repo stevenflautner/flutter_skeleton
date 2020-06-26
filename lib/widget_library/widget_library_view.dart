@@ -4,7 +4,7 @@ import 'package:flutter_manager/pub_dependency/pub_dependency.dart';
 import 'package:flutter_manager/ui/column_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 
 abstract class WidgetView {
   final String name;

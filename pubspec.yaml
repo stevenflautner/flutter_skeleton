@@ -22,16 +22,20 @@ dependencies:
 
   path_provider: 1.6.5
   file_chooser:
-    path: plugins/file_chooser
+    git:
+      url: git://github.com/google/flutter-desktop-embedding.git
+      path: plugins/flutter_plugins/file_chooser
   path: any
   #  path_provider: 1.6.5
   yaml: 2.2.0
   yamlicious: 0.1.0
   recase: 3.0.0
 
-  flutter_managed:
-    git:
-      url: http://github.com/stevenflautner/flutter_managed.git
+  flutter_skeleton:
+    path: ../flutter_skeleton
+#  flutter_managed:
+#    git:
+#      url: http://github.com/stevenflautner/flutter_managed.git
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

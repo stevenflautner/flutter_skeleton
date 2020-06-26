@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:file_chooser/file_chooser.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter_manager/screens/main_screen.dart';
 import 'package:path/path.dart';

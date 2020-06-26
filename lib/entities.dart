@@ -1,4 +1,4 @@
-import 'package:flutter_managed/dependency.dart';
+import 'package:flutter_skeleton/dependency.dart';
 import 'package:flutter_manager/framework/skeleton.dart';
 import 'package:flutter_manager/pub_dependency/pub_dependency.dart';
 import 'package:path/path.dart';

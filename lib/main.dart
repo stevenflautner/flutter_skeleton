@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_managed/app.dart';
-import 'package:flutter_managed/dependency.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/app.dart';
+import 'package:flutter_skeleton/dependency.dart';
+import 'package:flutter_skeleton/locator.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter_manager/logic/tabs.dart';
 import 'package:flutter_manager/screens/main_screen.dart';
 import 'package:flutter_manager/screens/project_chooser.dart';
+import 'package:flutter_skeleton/app.dart';
+import 'package:flutter_skeleton/dependency.dart';
+import 'package:flutter_skeleton/locator.dart';
 import 'package:provider/provider.dart';
 //import 'package:window_size/window_size.dart' as window_size;
 //import 'dart:math' as math;

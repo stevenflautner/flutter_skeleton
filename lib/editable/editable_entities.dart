@@ -4,7 +4,7 @@ import 'package:flutter_manager/entities.dart';
 import 'package:flutter_manager/framework/skeleton.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 
 class EditableEntities extends EditableData<Entity> {
 

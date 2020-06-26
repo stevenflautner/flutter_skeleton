@@ -229,7 +229,7 @@ class GrpcClient extends FileBone {
   String write() {
     return '''
 import 'package:vimpexcart/managed/grpc/g/proto/google/protobuf/wrappers.pb.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 import 'package:grpc/grpc.dart';
 ${get<GrpcClientInterceptors>().import()}
 ${get<GrpcProtoFiles>().import(where: (elem, fileInfo) => fileInfo.fileName.contains('.pbgrpc.'))}

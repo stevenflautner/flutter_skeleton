@@ -1,6 +1,6 @@
 import 'package:flutter_manager/data_editor/data_editor.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 import 'package:provider/provider.dart';
 
 class DataDialogButton extends StatelessWidget {

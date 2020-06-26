@@ -13,7 +13,7 @@ import 'package:flutter_manager/skeleton/skeleton.dart';
 import 'package:flutter_manager/ui/column_button.dart';
 import 'package:flutter_manager/widget_library/widget_library_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {

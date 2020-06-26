@@ -1,7 +1,7 @@
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter_manager/logic/pub_dependencies.dart';
 import 'package:flutter_manager/widget_library/widget_library_view.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 
 abstract class PubDependency {
 

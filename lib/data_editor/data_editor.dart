@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter_manager/framework/skeleton.dart';
 import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 
 abstract class EditableData<T extends DataElement> extends ChangeNotifier {
 

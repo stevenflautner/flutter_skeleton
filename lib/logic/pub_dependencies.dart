@@ -2,7 +2,7 @@ import 'package:flutter_manager/logic/app.dart';
 import 'package:flutter_manager/pub_dependency/pub_dependency.dart';
 import 'package:flutter_manager/widget_library/widget_library_view.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_managed/locator.dart';
+import 'package:flutter_skeleton/locator.dart';
 
 final allDependencies = {
   'flutter_rest_api': GitPubDependency(
