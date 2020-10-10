@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_skeleton/localizator.dart';
-import 'package:flutter_skeleton/locator.dart';
+import 'package:flutter_skeleton/locator.dart' as loc;
 import 'package:flutter_skeleton/skeleton.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dependency.dart';
+import 'locator.dart';
 
 typedef FutureOr<Iterable<dynamic>> Initializer();
 typedef FutureOr<Iterable<SingleChildWidget>> _Registrator(Dependency dependency);
@@ -29,7 +30,7 @@ void run({
   Skeleton skeleton,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
-  final locator = Locator();
+  final locator = loc.Locator();
   final dependency = Dependency(initializer != null ? await initializer() : null);
 
 //  SharedPreferences.setMockInitialValues({});
